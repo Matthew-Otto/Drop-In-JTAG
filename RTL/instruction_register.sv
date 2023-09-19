@@ -13,25 +13,32 @@
 //      shall be latched onto the instruction register output on the falling edge of TCK"
 
 module instruction_register #(parameter WIDTH) (
-    input tck, tdi, trst, enable,
+    input tck, tdi, tl_reset, ShiftIR, UpdateIR,
     output tdo,
-    output [WIDTH-1:0] mode
+    output logic [WIDTH-1:0] instruction
 );
 
-logic [WIDTH:0] link;
+logic [WIDTH:0] shift_reg;
 
-assign link[0] = tdi;
-assign tdo = link[WIDTH];
-assign mode = link[WIDTH:1];
+assign shift_reg[0] = tdi;
+assign tdo = shift_reg[WIDTH];
 
+
+// Shift register
 genvar i;
 for (i = 0; i < WIDTH; i = i + 1) begin
-    always @(posedge tck or negedge trst) begin
-        if (~trst)
-            link[i+1] <= 0;
-        else if (enable)
-            link[i+1] <= link[i];
+    always @(posedge tck) begin // TODO check spec for correct edge for reset || move reset to latch
+        shift_reg[i+1] <= shift_reg[i];
     end
 end
+
+// Instruction latch
+always @(posedge UpdateIR or posedge tl_reset) begin
+    if (tl_reset)
+        instruction <= 2'b01; // 7.2.1.e BYPASS or IDCODE instruction
+    else
+        instruction <= shift_reg[WIDTH:1];
+end
+
 
 endmodule // instruction_register
