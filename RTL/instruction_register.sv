@@ -15,10 +15,11 @@
 module instruction_register #(parameter WIDTH) (
     input tck, tdi, tl_reset, ShiftIR, UpdateIR,
     output tdo,
-    output logic [WIDTH-1:0] instruction
+    output logic [2^WIDTH-1:0] instructions
 );
 
-logic [WIDTH:0] shift_reg;
+logic [WIDTH:0]     shift_reg;
+logic [2^WIDTH-1:0] decoded;
 
 assign shift_reg[0] = tdi;
 assign tdo = shift_reg[WIDTH];
@@ -27,17 +28,24 @@ assign tdo = shift_reg[WIDTH];
 // Shift register
 genvar i;
 for (i = 0; i < WIDTH; i = i + 1) begin
-    always @(posedge tck) begin // TODO check spec for correct edge for reset || move reset to latch
+    always @(posedge tck) begin
         shift_reg[i+1] <= shift_reg[i];
     end
 end
 
+
+// Instruction decoder
+instruction_decoder #(.WIDTH(WIDTH)) irde (.instruction_reg(shift_reg[WIDTH:1]),
+                                           .instructions(decoded));
+
+
 // Instruction latch
 always @(posedge UpdateIR or posedge tl_reset) begin
     if (tl_reset)
-        instruction <= 2'b01; // 7.2.1.e BYPASS or IDCODE instruction
+        // IEEE 1149.1 - 7.2.1.e: first instruction (BYPASS or IDCODE) is set to "on"
+        instructions <= {{2^WIDTH-1{1'b0}},{1'b1}}; 
     else
-        instruction <= shift_reg[WIDTH:1];
+        instructions <= decoded;
 end
 
 
