@@ -1,6 +1,6 @@
 module spec_tap_controller (
     input tck, trst, tms,
-    output logic reset,
+    output logic reset, // instruction idcode or bypass
     output logic tdo_en,
     output logic shiftIR,
     output logic captureIR,
@@ -43,7 +43,7 @@ always @(negedge tck, negedge trst) begin
         shiftIR <= ~state[0] && state[1] && ~state[2] && state[3];
         captureIR <= ~state[0] && state[1] && state[2] && state[3];
         shiftDR <= ~state[0] && state[1] && ~state[2] && ~state[3];
-        captureDR <= ~state[0] && state[1] && state[2] && state[3];
+        captureDR <= ~state[0] && state[1] && state[2] && ~state[3];
     end
 end
 
