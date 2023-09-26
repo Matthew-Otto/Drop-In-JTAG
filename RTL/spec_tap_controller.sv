@@ -39,7 +39,7 @@ always @(negedge tck, negedge trst) begin
         captureDR <= 1'b0;
     end else begin
         reset <= &state;
-        tdo_en <= shiftIR || shiftDR;
+        tdo_en <= ~state[0] && state[1] && ~state[2] && state[3] || ~state[0] && state[1] && ~state[2] && ~state[3]; // shiftIR || shiftDR;
         shiftIR <= ~state[0] && state[1] && ~state[2] && state[3];
         captureIR <= ~state[0] && state[1] && state[2] && state[3];
         shiftDR <= ~state[0] && state[1] && ~state[2] && ~state[3];
@@ -47,7 +47,7 @@ always @(negedge tck, negedge trst) begin
     end
 end
 
-assign clockIR = ~tck && ~state[0] && state[1] && state[3];
+assign clockIR = tck || state[0] || ~state[1] || ~state[3];
 assign updateIR = ~tck && state[0] && ~state[1] && state[2] && state[3];
 assign clockDR = tck || state[0] || ~state[1] || state[3];
 assign updateDR = ~tck && updateDRstate;
