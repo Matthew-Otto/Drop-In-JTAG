@@ -7,13 +7,24 @@
 // "The two least significant instruction register cells (i.e., those nearest the serial output) shall load a fixed
 //      binary “01” pattern (the 1 into the least significant bit location) in the Capture-IR TAP controller state (see 7.2)""
 
+// 7.2.1
+// @Capture-IR Load 01 into bits closest to TDO and, optionally, design-specific
+// data or fixed values into other bits closer to TDI
+
 // 7.2.1 e
 // "After entry into the Test-Logic-Reset controller state as a result of the clocked operation of the TAP
 //      controller, the IDCODE instruction (or, if there is no device identification register, the BYPASS instruction)
 //      shall be latched onto the instruction register output on the falling edge of TCK"
 
+// 8.1.1 e
+// All test logic responses to an active instruction shall terminate when a different instruction is transferred to
+// the parallel output of the instruction register (i.e., in the Update-IR or Test-Logic-Reset controller states)
+// unless the new instruction supports the same test logic response.
+
+
 module instruction_register #(parameter WIDTH) (
-    input tck, tdi, tl_reset, ShiftIR, UpdateIR,
+    input tck_ir, tdi, tl_reset, 
+    input captureIR, shiftIR, updateIR,
     output tdo,
     output logic [2^WIDTH-1:0] instructions
 );
@@ -28,7 +39,7 @@ assign tdo = shift_reg[WIDTH];
 // Shift register
 genvar i;
 for (i = 0; i < WIDTH; i = i + 1) begin
-    always @(posedge tck) begin
+    always @(posedge tck_ir) begin
         shift_reg[i+1] <= shift_reg[i];
     end
 end
@@ -40,11 +51,11 @@ instruction_decoder #(.WIDTH(WIDTH)) irde (.instruction_reg(shift_reg[WIDTH:1]),
 
 
 // Instruction latch
-always @(posedge UpdateIR or posedge tl_reset) begin
+always @(negedge tck_ir or posedge tl_reset) begin
     if (tl_reset)
         // IEEE 1149.1 - 7.2.1.e: first instruction (BYPASS or IDCODE) is set to "on"
         instructions <= {{2^WIDTH-1{1'b0}},{1'b1}}; 
-    else
+    else if (updateIR)
         instructions <= decoded;
 end
 
