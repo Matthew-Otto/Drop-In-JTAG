@@ -99,9 +99,9 @@ always_comb begin
         D_BYPASS          : tdo_dr <= tdo_br;
         D_SAMPLE_PRELOAD,
         D_EXTEST          : tdo_dr <= bsr_tdo;
-        D_IDCODE          : tdo_dr <= 
-        D_CLAMP           : tdo_dr <= 
-        D_IC_RESET        : tdo_dr <= 
+        //D_IDCODE          : tdo_dr <= 
+        //D_CLAMP           : tdo_dr <= 
+        //D_IC_RESET        : tdo_dr <= 
     endcase
 end
 
