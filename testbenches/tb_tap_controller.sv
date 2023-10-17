@@ -1,4 +1,4 @@
-`timescale 1ns/1ps
+// `timescale 1ns/1ps
 module testbench();
 
 localparam CYCLES = 57;
@@ -24,7 +24,7 @@ logic select;
 
 logic [CYCLES-1:0] testvector;
 
-spec_tap_controller dut (
+tap_controller dut (
     .tck(tck),
     .trst(trst),
     .tms(tms),

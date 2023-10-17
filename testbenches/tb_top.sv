@@ -3,12 +3,9 @@ module testbench();
 
 localparam CYCLES = 57;
 
-logic [CYCLES-1:0] tms_vector;
-logic [CYCLES-1:0] tdi_vector;
-integer handle3;
-integer desc3;
-
 integer i;
+logic [CYCLES-1:0] tmsvector;
+logic [CYCLES-1:0] tdivector;
 
 logic tck, trst, tms, tdi, tdo;
 
@@ -38,20 +35,6 @@ initial begin
     forever #5 tck = ~tck;
 end
 
-// fileout
-initial begin
-    handle3 = $fopen("fsm.out");	
-    desc3 = handle3;
-end
-
-/*
-always begin
-    @(posedge tck) begin
-        $fdisplay(desc3, "uclk: %b | %b | %b || val: %b | data: %b", uclk, reset, rx, data_val, data);
-    end
-end
-*/
-
 
 
 initial begin
@@ -61,20 +44,21 @@ initial begin
     #1 trst = 0;
     #1 trst = 1;
 
-                 // tlr   rt/idle     shiftdr      shiftdr        idle
-    //testvector = 43'b111_0000000_0100_00000000_110_0000000_11111_000000;
-    tms_vector = 57'b111111111011000100001000011000100001000010000110001111111;
+    tmsvector = 57'b11111101100_001_1100_00000000000000000000000000000000_1111111;
+    tdivector = 57'b00000000000_100_0000000000000000000000000000000000000000000;
 
     for (i=CYCLES-1; i >= 0; i=i-1) begin
         
         @(negedge tck) begin
 
-            tms <= tms_vector[i];
+            tms <= tmsvector[i];
+            tdi <= tdivector[i];
             
         end
     end
 
-    $finish;
+    //$finish;
+    $stop;
 end
 
 endmodule // testbench

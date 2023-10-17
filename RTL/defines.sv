@@ -10,15 +10,15 @@
 // encoded instructions
 `define E_BYPASS         3'b111
 `define E_IDCODE         3'b001
-`define E_SAMPLE_PRELOAD 6'b000010
-`define E_EXTEST         6'b000100
-`define E_CLAMP          6'b010000
-`define E_IC_RESET       6'b100000
+`define E_SAMPLE_PRELOAD 3'b010
+`define E_EXTEST         3'b011
+`define E_CLAMP          3'b100
+`define E_IC_RESET       3'b101
 
 // decoded instructions
-`define D_BYPASS         `INST_COUNT'b1
-`define D_IDCODE         `INST_COUNT'b10
-`define D_SAMPLE_PRELOAD `INST_COUNT'b100
-`define D_EXTEST         `INST_COUNT'b1000
-`define D_CLAMP          `INST_COUNT'b100000
-`define D_IC_RESET       `INST_COUNT'b1000000
+`define D_BYPASS         'b1
+`define D_IDCODE         'b10
+`define D_SAMPLE_PRELOAD 'b100
+`define D_EXTEST         'b1000
+`define D_CLAMP          'b100000
+`define D_IC_RESET       'b1000000

@@ -15,7 +15,7 @@ vlib work
 
 # compile source files
 vlog ../testbenches/tb_top.sv top.sv jtag_test_logic.sv 
-vlog spec_tap_controller.sv instruction_register.sv 
+vlog tap_controller.sv instruction_register.sv 
 vlog bypass_register.sv bsr_cell.sv ../example_logic/full_adder.sv
 vlog device_identification_register.sv
 

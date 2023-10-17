@@ -1,4 +1,4 @@
-// SEE 1149.1 - 12.1.1 for details on providing optional USERCODE instruction support
+// See 1149.1 - 12.1.1 for details on providing optional USERCODE instruction support
 
 module device_identification_register (
     `include "defines.sv"
@@ -16,9 +16,6 @@ assign tdo = shift_reg[32];
 genvar i;
 for (i = 0; i < 32; i = i + 1) begin
     always @(posedge clockDR) begin 
-        //On the rising edge of TCK in the Capture-DR controller state, the device identification register shall be set
-        // such that subsequent shifting causes an identification code to be presented in serial form at TDO
-
         if (captureDR) begin
             shift_reg[32:1] <= `DEVICE_ID;
         end else begin
@@ -27,8 +24,5 @@ for (i = 0; i < 32; i = i + 1) begin
 
     end
 end
-
-
-
 
 endmodule // device_identification_register

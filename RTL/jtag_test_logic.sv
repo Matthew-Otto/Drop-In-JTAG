@@ -33,7 +33,7 @@ logic tdo_br;
 logic [`INST_COUNT-1:0] instructions;
 
 
-spec_tap_controller fsm (
+tap_controller fsm (
     .tck(tck),
     .trst(trst),
     .tms(tms),
@@ -62,7 +62,7 @@ assign tdo = ~tdo_en ? 1'b0 : // TODO: check spec to see if this should be low o
 instruction_register ir (
     .tck_ir(ir_clk), 
     .tdi(tdi_ir),
-    .tl_reset(trst),
+    .tl_reset(reset),
     .shiftIR(shiftIR),
     .captureIR(captureIR),
     .updateIR(updateIR),
@@ -101,7 +101,7 @@ assign bsr_update = updateDR || clk_dr && captureDR;
 
 // DR demux
 always_comb begin
-    unique case (instructions)
+    unique0 case (instructions)
         `D_BYPASS          : tdo_dr <= tdo_br;
         `D_IDCODE          : tdo_dr <= tdo_id;
         `D_SAMPLE_PRELOAD,

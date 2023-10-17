@@ -1,4 +1,5 @@
 *.wlf
+wlf*
 transcript*
 work/
 *.out
