@@ -1,11 +1,12 @@
 module bypass_register (
-    input tck, tdi, enable,
+    input        tdi, 
+    input        clockDR, 
+    input        shiftDR,
     output logic tdo
 );
 
-always @(tck) begin
-    if (enable)
-        tdo <= tdi;
+always @(clockDR) begin
+    tdo <= tdi & shiftDR;   // 10.1.1 (b)
 end
 
 endmodule // bypass_register

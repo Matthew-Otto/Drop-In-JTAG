@@ -1,4 +1,6 @@
-module jtag_top #(parameter WIDTH=2) (
+module jtag_test_logic (
+    `include "defines.sv"
+
     input  tck, tms, tdi, trst,
     output tdo,
 
@@ -28,7 +30,7 @@ logic tdi_ir, tdi_dr;
 logic tdo_ir, tdo_dr;
 logic tdo_br;
 
-logic [2^WIDTH-1:0] instructions;
+logic [`INST_COUNT-1:0] instructions;
 
 
 spec_tap_controller fsm (
@@ -57,7 +59,7 @@ assign tdo = ~tdo_en ? 1'b0 : // TODO: check spec to see if this should be low o
               select ? tdo_ir : tdo_dr;
 
 
-instruction_register #(.WIDTH(WIDTH)) ir (
+instruction_register ir (
     .tck_ir(ir_clk), 
     .tdi(tdi_ir),
     .tl_reset(trst),
@@ -72,11 +74,23 @@ instruction_register #(.WIDTH(WIDTH)) ir (
 // Data Registers
 
 bypass_register br (
-    .tck(clk_dr),
+    .clockDR(clk_dr),
     .tdi(tdi_dr),
-    .tdo(tdo_br),
-    .enable(instructions[0]) // BYPASS
-    );
+    .shiftDR(shiftDR), // 10.1.1 (b)
+    .tdo(tdo_br)
+);
+
+
+// TODO: move to intermediate wires section
+logic tdi_id;
+logic tdo_id;
+
+device_identification_register didr (
+    .tdi(tdi_dr),
+    .tdo(tdo_id),
+    .clockDR(clk_dr),
+    .captureDR(captureDR)
+);
     
 
 // BSR mux
@@ -84,22 +98,14 @@ assign bsr_tdi = |instructions[2:1] ? tdo_dr : 1'bx; // @ EXTEST or SAMPLE_PRELO
 assign bsr_clk = clk_dr && |instructions[2:1];
 assign bsr_update = updateDR || clk_dr && captureDR;
 
-// TODO: make these global defines
-localparam [2^WIDTH-1:0]
-    D_BYPASS = 1'b1,
-    D_SAMPLE_PRELOAD = 2'b10,
-    D_EXTEST = 3'b100,
-    D_IDCODE = 4'b1000,
-    D_CLAMP = 5'b10000,
-    D_IC_RESET = 6'b100000;
 
 // DR demux
 always_comb begin
     unique case (instructions)
-        D_BYPASS          : tdo_dr <= tdo_br;
-        D_SAMPLE_PRELOAD,
-        D_EXTEST          : tdo_dr <= bsr_tdo;
-        //D_IDCODE          : tdo_dr <= 
+        `D_BYPASS          : tdo_dr <= tdo_br;
+        `D_IDCODE          : tdo_dr <= tdo_id;
+        `D_SAMPLE_PRELOAD,
+        `D_EXTEST          : tdo_dr <= bsr_tdo;
         //D_CLAMP           : tdo_dr <= 
         //D_IC_RESET        : tdo_dr <= 
     endcase

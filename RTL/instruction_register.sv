@@ -22,39 +22,57 @@
 // unless the new instruction supports the same test logic response.
 
 
-module instruction_register #(parameter WIDTH) (
-    input tck_ir, tdi, tl_reset, 
-    input captureIR, shiftIR, updateIR,
-    output tdo,
-    output logic [2^WIDTH-1:0] instructions
+module instruction_register (
+    `include "defines.sv"
+
+    input                          tck_ir,
+    input                          tdi,
+    input                          tl_reset, 
+    input                          captureIR,
+    input                          shiftIR,
+    input                          updateIR,
+    output                         tdo,
+    output logic [`INST_COUNT-1:0] instructions
 );
 
-logic [WIDTH:0]     shift_reg;
-logic [2^WIDTH-1:0] decoded;
+logic [`INST_REG_WIDTH:0]  shift_reg;
+logic [`INST_COUNT-1:0]    decoded;
 
 assign shift_reg[0] = tdi;
-assign tdo = shift_reg[WIDTH];
+assign tdo = shift_reg[`INST_REG_WIDTH];
 
 
 // Shift register
 genvar i;
-for (i = 0; i < WIDTH; i = i + 1) begin
+for (i = 0; i < `INST_REG_WIDTH; i = i + 1) begin
     always @(posedge tck_ir) begin
         shift_reg[i+1] <= shift_reg[i];
     end
 end
 
 
-// Instruction decoder
-instruction_decoder #(.WIDTH(WIDTH)) irde (.instruction_reg(shift_reg[WIDTH:1]),
-                                           .instructions(decoded));
+// Instruction decoder\
+
+//Rule e) of 8.1.1 also implies that there is no memory in the instruction decoder, that the decoding of the instruction
+// register is strictly static (combinatorial).
+always_comb begin
+    unique case (shift_reg[`INST_REG_WIDTH:1])
+        `E_BYPASS         : decoded <= `D_BYPASS;
+        `E_SAMPLE_PRELOAD : decoded <= `D_SAMPLE_PRELOAD;
+        `E_EXTEST         : decoded <= `D_EXTEST;
+        `E_IDCODE         : decoded <= `D_IDCODE;
+        `E_CLAMP          : decoded <= `D_CLAMP;
+        `E_IC_RESET       : decoded <= `D_IC_RESET;
+    endcase
+end
+
 
 
 // Instruction latch
 always @(negedge tck_ir or posedge tl_reset) begin
     if (tl_reset)
         // IEEE 1149.1 - 7.2.1.e: first instruction (BYPASS or IDCODE) is set to "on"
-        instructions <= {{2^WIDTH-1{1'b0}},{1'b1}}; 
+        instructions <= `D_IDCODE; 
     else if (updateIR)
         instructions <= decoded;
 end

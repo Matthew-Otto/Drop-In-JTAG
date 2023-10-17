@@ -2,14 +2,14 @@
 //  alongside example system logic and boundary scan register
 
 
-module top (
-    // dut logic
-    input a,b,c,
-    output sum,carry,
-
+module top (    
     // jtag logic
     input tck,tdi,tms,trst,
-    output tdo
+    output tdo,
+
+    // dut logic
+    input a,b,c,
+    output sum,carry
 );
 
 logic bsr_tdi, bsr_clk, bsr_update, bsr_tdo;
@@ -17,6 +17,9 @@ logic bsr_tdi, bsr_clk, bsr_update, bsr_tdo;
 logic [4:0] system_io;
 logic [4:0] logic_io; // TODO update name to match spec
 logic [5:0] bsr;
+
+assign bsr[0] = bsr_tdi;
+assign bsr_tdo = bsr[5];
 
 // test logic ////////////////////////////////////////////////////
 
