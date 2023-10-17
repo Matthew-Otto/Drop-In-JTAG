@@ -23,3 +23,10 @@ Various data registers could share the same shift register circuitry, with diffe
 the registers defined by this standard and also by any design-specific test data register.
 
 ex: device id could share space with ......?
+
+
+# Demo design ideas:
+
+https://balau82.wordpress.com/2012/01/07/ongoing-project-arduino-as-a-jtag-adapter/
+
+https://github.com/mrjimenez/JTAG
