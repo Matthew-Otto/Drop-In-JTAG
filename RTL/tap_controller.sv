@@ -14,7 +14,7 @@ module tap_controller (
     output logic select
 );
 
-logic [3:0] state;
+(* mark_debug = "true" *) logic [3:0] state;
 
 always @(posedge tck, negedge trst) begin
     if (~trst) begin

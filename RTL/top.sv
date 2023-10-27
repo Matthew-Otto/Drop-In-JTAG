@@ -4,7 +4,7 @@
 
 module top (    
     // jtag logic
-    input tck,tdi,tms,trst,
+    (* mark_debug = "true" *) input tck,tdi,tms,trst,
     output tdo,
 
     // dut logic
@@ -12,7 +12,7 @@ module top (
     output sum,carry
 );
 
-logic bsr_tdi, bsr_clk, bsr_update, bsr_tdo;
+logic bsr_tdi, bsr_clk, bsr_update, bsr_shift, bsr_enable, bsr_mode, bsr_tdo;
 
 logic [4:0] system_io;
 logic [4:0] logic_io; // TODO update name to match spec
@@ -32,6 +32,8 @@ jtag_test_logic jtag (
     .bsr_tdi(bsr_tdi),
     .bsr_clk(bsr_clk),
     .bsr_update(bsr_update),
+    .bsr_shift(bsr_shift),
+    .bsr_mode(bsr_mode),
     .bsr_tdo(bsr_tdo)
 );
 
@@ -45,10 +47,10 @@ assign carry = system_io[4];
 
 genvar i;
 for (i=0; i<3; i=i+1) begin
-    bsr_cell bsr_in (.clk(),
-                     .update(),
-                     .shift_dr(),
-                     .mode(),
+    bsr_cell bsr_in (.clk(bsr_clk),
+                     .update_dr(bsr_update),
+                     .shift_dr(bsr_shift),
+                     .mode(bsr_mode),
                      .parallel_in(system_io[i]),
                      .parallel_out(logic_io[i]),
                      .sequential_in(bsr[i]),
@@ -56,10 +58,10 @@ for (i=0; i<3; i=i+1) begin
 end
 
 for (i=3; i<5; i=i+1) begin
-    bsr_cell bsr_out (.clk(),
-                      .update(),
-                      .shift_dr(),
-                      .mode(),
+    bsr_cell bsr_out (.clk(bsr_clk),
+                      .update_dr(bsr_update),
+                      .shift_dr(bsr_shift),
+                      .mode(bsr_mode),
                       .parallel_in(logic_io[i]),
                       .parallel_out(system_io[i]),
                       .sequential_in(bsr[i]),

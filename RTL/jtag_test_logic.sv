@@ -5,6 +5,7 @@ module jtag_test_logic (
     output tdo,
 
     output bsr_tdi, bsr_clk, bsr_update,
+    output bsr_shift, bsr_mode,
     input bsr_tdo
     // maybe bsr clock??
 );
@@ -29,6 +30,7 @@ logic select;
 logic tdi_ir, tdi_dr;
 logic tdo_ir, tdo_dr;
 logic tdo_br;
+logic tdo_id;
 
 logic [`INST_COUNT-1:0] instructions;
 
@@ -81,23 +83,24 @@ bypass_register br (
 );
 
 
-// TODO: move to intermediate wires section
-logic tdi_id;
-logic tdo_id;
-
 device_identification_register didr (
     .tdi(tdi_dr),
     .tdo(tdo_id),
-    .clockDR(clk_dr),
+    .clockDR(clk_dr && instructions == `D_IDCODE), // TODO: is this clock gater necessary/useful?
     .captureDR(captureDR)
 );
     
 
 // BSR mux
-assign bsr_tdi = |instructions[2:1] ? tdo_dr : 1'bx; // @ EXTEST or SAMPLE_PRELOAD
-assign bsr_clk = clk_dr && |instructions[2:1];
-assign bsr_update = updateDR || clk_dr && captureDR;
+logic bsr_enable;
+assign bsr_enable = (instructions == `D_SAMPLE_PRELOAD || instructions == `D_EXTEST);
 
+assign bsr_mode = (instructions == `D_EXTEST /*TODO: D_CLAMP*/);  // selects parallel output latches for BSR output
+
+assign bsr_tdi = bsr_enable ? tdi_dr : 1'bx;
+assign bsr_clk = clk_dr || ~bsr_enable;  // clock high when idle
+assign bsr_update = updateDR || clk_dr && captureDR;  // 8.7.1 (f)
+assign bsr_shift = shiftDR;
 
 // DR demux
 always_comb begin

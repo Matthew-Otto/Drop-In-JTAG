@@ -32,7 +32,7 @@ end
 // Instruction decoder
 //8.1.1 (e)
 always_comb begin
-    unique0 case (shift_reg[`INST_REG_WIDTH:1]) // TODO: check spec for default case behavior
+    unique0 case (shift_reg[`INST_REG_WIDTH-1:0]) // TODO: check spec for default case behavior
         `E_BYPASS         : decoded <= `D_BYPASS;
         `E_SAMPLE_PRELOAD : decoded <= `D_SAMPLE_PRELOAD;
         `E_EXTEST         : decoded <= `D_EXTEST;

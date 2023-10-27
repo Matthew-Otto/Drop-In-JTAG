@@ -26,6 +26,46 @@ vsim +nowarn3829 -error 3015 -voptargs=+acc -l transcript.txt work.testbench
 # view wave
 
 -- display input and output signals as hexidecimal values
+add wave -hex /testbench/dut/jtag/ir/decoded
+add wave -hex /testbench/tck
+add wave -hex /testbench/trst
+add wave -hex /testbench/tms
+add wave -hex /testbench/tdi
+add wave -hex /testbench/tdo
+
+add wave -noupdate -divider -height 32 "TAP controller"
+add wave -label state -hex /testbench/dut/jtag/fsm/state 
+add wave -label tck -hex /testbench/dut/jtag/fsm/tck 
+add wave -label trst -hex /testbench/dut/jtag/fsm/trst 
+add wave -label tms -hex /testbench/dut/jtag/fsm/tms 
+add wave -label reset -hex /testbench/dut/jtag/fsm/reset 
+add wave -label tdo_en -hex /testbench/dut/jtag/fsm/tdo_en 
+add wave -label shiftIR -hex /testbench/dut/jtag/fsm/shiftIR 
+add wave -label captureIR -hex /testbench/dut/jtag/fsm/captureIR 
+add wave -label clockIR -hex /testbench/dut/jtag/fsm/clockIR 
+add wave -label updateIR -hex /testbench/dut/jtag/fsm/updateIR 
+add wave -label shiftDR -hex /testbench/dut/jtag/fsm/shiftDR 
+add wave -label captureDR -hex /testbench/dut/jtag/fsm/captureDR 
+add wave -label clockDR -hex /testbench/dut/jtag/fsm/clockDR 
+add wave -label updateDR -hex /testbench/dut/jtag/fsm/updateDR 
+add wave -label updateDRstate -hex /testbench/dut/jtag/fsm/updateDRstate 
+add wave -label select -hex /testbench/dut/jtag/fsm/select 
+
+add wave -noupdate -divider -height 32 "External I/O"
+add wave -noupdate -radix hexadecimal -label a /testbench/a
+add wave -noupdate -radix hexadecimal -label b /testbench/b
+add wave -noupdate -radix hexadecimal -label c /testbench/c
+add wave -noupdate -radix hexadecimal -label sum /testbench/sum
+add wave -noupdate -radix hexadecimal -label carry /testbench/carry
+
+add wave -noupdate -divider -height 32 "Example Logic (Internal)"
+add wave -noupdate -radix hexadecimal -label a /testbench/dut/fa/a
+add wave -noupdate -radix hexadecimal -label b /testbench/dut/fa/b
+add wave -noupdate -radix hexadecimal -label carry_in /testbench/dut/fa/carry_in
+add wave -noupdate -radix hexadecimal -label sum /testbench/dut/fa/sum
+add wave -noupdate -radix hexadecimal -label carry_out /testbench/dut/fa/carry_out
+
+add wave -noupdate -divider -height 32 "All Signals"
 # Diplays All Signals recursively
 add wave -hex -r /testbench/*
 #add wave -noupdate -divider -height 32 "Title"

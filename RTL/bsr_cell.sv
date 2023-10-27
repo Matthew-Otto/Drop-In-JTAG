@@ -1,7 +1,7 @@
 // IEEE 1149.1 - 8.5.1 example boundary scan register
 
 module bsr_cell (
-    input clk, update, shift_dr, mode,
+    input clk, update_dr, shift_dr, mode,
     input parallel_in, sequential_in,
     output logic parallel_out, sequential_out
 );
@@ -10,10 +10,10 @@ logic state_in, state_out;
 
 assign state_in = shift_dr ? sequential_in : parallel_in;
 
-always @(clk)
+always @(posedge clk)
     sequential_out <= state_in;
 
-always @(update)
+always @(posedge update_dr)  // 11.3.1 (b)
     state_out <= sequential_out;
 
 assign parallel_out = mode ? state_out : parallel_in;
