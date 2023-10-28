@@ -72,6 +72,12 @@ instruction_register ir (
     .instructions(instructions)
 );
 
+logic sample_preload;
+logic extest;
+
+assign sample_preload = instructions == `D_SAMPLE_PRELOAD;
+assign extest = instructions == `D_EXTEST;
+
 
 // Data Registers
 
@@ -89,13 +95,13 @@ device_identification_register didr (
     .clockDR(clk_dr && instructions == `D_IDCODE), // TODO: is this clock gater necessary/useful?
     .captureDR(captureDR)
 );
-    
+
 
 // BSR mux
 logic bsr_enable;
-assign bsr_enable = (instructions == `D_SAMPLE_PRELOAD || instructions == `D_EXTEST);
+assign bsr_enable = (sample_preload || extest);
 
-assign bsr_mode = (instructions == `D_EXTEST /*TODO: D_CLAMP*/);  // selects parallel output latches for BSR output
+assign bsr_mode = (extest /*TODO: D_CLAMP*/);  // selects parallel output latches for BSR output
 
 assign bsr_tdi = bsr_enable ? tdi_dr : 1'bx;
 assign bsr_clk = clk_dr || ~bsr_enable;  // clock high when idle

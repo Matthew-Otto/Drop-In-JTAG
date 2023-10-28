@@ -26,12 +26,22 @@ vsim +nowarn3829 -error 3015 -voptargs=+acc -l transcript.txt work.testbench
 # view wave
 
 -- display input and output signals as hexidecimal values
-add wave -hex /testbench/dut/jtag/ir/decoded
+add wave -hex /testbench/dut/jtag/ir/instructions
 add wave -hex /testbench/tck
 add wave -hex /testbench/trst
 add wave -hex /testbench/tms
 add wave -hex /testbench/tdi
 add wave -hex /testbench/tdo
+add wave -hex /testbench/tdo_sample
+add wave -hex /testbench/tdo_ref
+add wave -hex /testbench/dut/jtag/bsr_tdo
+add wave -hex /testbench/dut/jtag/tdo_en
+add wave -hex /testbench/dut/jtag/select
+add wave -hex /testbench/dut/jtag/tdo_ir
+add wave -hex /testbench/dut/jtag/tdo_dr
+add wave -hex /testbench/dut/bsr_update
+add wave -hex /testbench/dut/bsr_clk
+add wave -hex /testbench/dut/jtag/shiftDR
 
 add wave -noupdate -divider -height 32 "TAP controller"
 add wave -label state -hex /testbench/dut/jtag/fsm/state 
@@ -49,7 +59,19 @@ add wave -label captureDR -hex /testbench/dut/jtag/fsm/captureDR
 add wave -label clockDR -hex /testbench/dut/jtag/fsm/clockDR 
 add wave -label updateDR -hex /testbench/dut/jtag/fsm/updateDR 
 add wave -label updateDRstate -hex /testbench/dut/jtag/fsm/updateDRstate 
-add wave -label select -hex /testbench/dut/jtag/fsm/select 
+add wave -label select -hex /testbench/dut/jtag/fsm/select
+
+add wave -noupdate -divider -height 32 "BSR"
+add wave -label sequential_out[0] -hex {/testbench/dut/genblk1[0]/bsr_in/sequential_out}
+add wave -label sequential_out[1] -hex {/testbench/dut/genblk1[1]/bsr_in/sequential_out}
+add wave -label sequential_out[2] -hex {/testbench/dut/genblk1[2]/bsr_in/sequential_out}
+add wave -label sequential_out[3] -hex {/testbench/dut/genblk2[3]/bsr_out/sequential_out}
+add wave -label sequential_out[4] -hex {/testbench/dut/genblk2[4]/bsr_out/sequential_out}
+add wave -label parallel_in[0] -hex {/testbench/dut/genblk1[0]/bsr_in/parallel_in}
+add wave -label parallel_in[1] -hex {/testbench/dut/genblk1[1]/bsr_in/parallel_in}
+add wave -label parallel_in[2] -hex {/testbench/dut/genblk1[2]/bsr_in/parallel_in}
+add wave -label parallel_in[3] -hex {/testbench/dut/genblk2[3]/bsr_out/parallel_in}
+add wave -label parallel_in[4] -hex {/testbench/dut/genblk2[4]/bsr_out/parallel_in}
 
 add wave -noupdate -divider -height 32 "External I/O"
 add wave -noupdate -radix hexadecimal -label a /testbench/a
