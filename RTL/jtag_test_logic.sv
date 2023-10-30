@@ -7,10 +7,7 @@ module jtag_test_logic (
     output bsr_tdi, bsr_clk, bsr_update,
     output bsr_shift, bsr_mode,
     input bsr_tdo
-    // maybe bsr clock??
 );
-
-logic [3:0] out;
 
 // TAP controller logic
 logic reset;
@@ -26,13 +23,19 @@ logic clk_dr;
 logic updateDRstate;
 logic select;
 
+// instruction signals
+logic [`INST_COUNT-1:0] instructions;
+logic idcode;
+logic sample_preload;
+logic extest;
+logic intest;
+logic clamp;
+
 // intermediate wires
 logic tdi_ir, tdi_dr;
 logic tdo_ir, tdo_dr;
 logic tdo_br;
 logic tdo_id;
-
-logic [`INST_COUNT-1:0] instructions;
 
 
 tap_controller fsm (
@@ -72,11 +75,13 @@ instruction_register ir (
     .instructions(instructions)
 );
 
-logic sample_preload;
-logic extest;
 
-assign sample_preload = instructions == `D_SAMPLE_PRELOAD;
-assign extest = instructions == `D_EXTEST;
+// synth tool should recognize these as one-hot signals
+assign idcode         = (instructions == `D_IDCODE);
+assign sample_preload = (instructions == `D_SAMPLE_PRELOAD);
+assign extest         = (instructions == `D_EXTEST);
+assign intest         = (instructions == `D_INTEST);
+assign clamp          = (instructions == `D_CLAMP);
 
 
 // Data Registers
@@ -92,21 +97,22 @@ bypass_register br (
 device_identification_register didr (
     .tdi(tdi_dr),
     .tdo(tdo_id),
-    .clockDR(clk_dr && instructions == `D_IDCODE), // TODO: is this clock gater necessary/useful?
+    .clockDR(clk_dr || ~idcode),
     .captureDR(captureDR)
 );
 
 
 // BSR mux
 logic bsr_enable;
-assign bsr_enable = (sample_preload || extest);
+assign bsr_enable = (sample_preload || extest || intest || clamp);
 
-assign bsr_mode = (extest /*TODO: D_CLAMP*/);  // selects parallel output latches for BSR output
+assign bsr_mode = (extest || intest || clamp);  // selects parallel output latches for BSR output
 
 assign bsr_tdi = bsr_enable ? tdi_dr : 1'bx;
 assign bsr_clk = clk_dr || ~bsr_enable;  // clock high when idle
 assign bsr_update = updateDR || clk_dr && captureDR;  // 8.7.1 (f)
 assign bsr_shift = shiftDR;
+
 
 // DR demux
 always_comb begin
@@ -114,8 +120,9 @@ always_comb begin
         `D_BYPASS          : tdo_dr <= tdo_br;
         `D_IDCODE          : tdo_dr <= tdo_id;
         `D_SAMPLE_PRELOAD,
-        `D_EXTEST          : tdo_dr <= bsr_tdo;
-        //D_CLAMP           : tdo_dr <= 
+        `D_EXTEST,
+        `D_INTEST,
+        `D_CLAMP           : tdo_dr <= bsr_tdo;
         //D_IC_RESET        : tdo_dr <= 
     endcase
 end

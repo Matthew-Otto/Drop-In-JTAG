@@ -72,6 +72,11 @@ add wave -label parallel_in[1] -hex {/testbench/dut/genblk1[1]/bsr_in/parallel_i
 add wave -label parallel_in[2] -hex {/testbench/dut/genblk1[2]/bsr_in/parallel_in}
 add wave -label parallel_in[3] -hex {/testbench/dut/genblk2[3]/bsr_out/parallel_in}
 add wave -label parallel_in[4] -hex {/testbench/dut/genblk2[4]/bsr_out/parallel_in}
+add wave -label parallel_out[0] -hex {/testbench/dut/genblk1[0]/bsr_in/parallel_out}
+add wave -label parallel_out[1] -hex {/testbench/dut/genblk1[1]/bsr_in/parallel_out}
+add wave -label parallel_out[2] -hex {/testbench/dut/genblk1[2]/bsr_in/parallel_out}
+add wave -label parallel_out[3] -hex {/testbench/dut/genblk2[3]/bsr_out/parallel_out}
+add wave -label parallel_out[4] -hex {/testbench/dut/genblk2[4]/bsr_out/parallel_out}
 
 add wave -noupdate -divider -height 32 "External I/O"
 add wave -noupdate -radix hexadecimal -label a /testbench/a
