@@ -154,6 +154,41 @@ initial begin
     end
     $display("EXTEST test completed %d cycles with %d errors.", cc+1, errors);
 
+
+    //// PRELOAD -> INTEST ////////////////////////////////////////////////////////////////////
+
+    cc = 0;
+    errors = 0;
+    tmsvector = 'b1101100_0001_1100_00001__11100_0001_1100_00001_1100_00001_1100_00001_11111;
+    c_vec =     'b0000000_0000_0001_00000__00000_0000_1111_11111_1111_11111_1111_11111_11111;
+    tdivector = 'b0000000_0100_0000_00100__00000_0010_0000_00000_0000_00010_0000_00000_00000;
+    tdovector = 'b0000000_1000_0000_11111__00000_1000_0000_01111_0000_00111_0000_01111_00000;
+
+    #1 trst = 0;
+    #1 trst = 1;
+
+    $display("Start INTEST test");
+    for (i=60; i >= 0; i=i-1) begin
+        cc <= cc + 1;
+        
+        @(negedge tck) begin
+            tms <= tmsvector[i];
+            tdi <= tdivector[i];
+            c <= c_vec[i];
+
+            if (tdo_sample != tdo_ref) begin
+                $display("Error: incorrect value at TDO on cycle %d", cc);
+                errors <= errors + 1;
+            end
+        end
+
+        @(posedge tck) begin
+            tdo_sample <= tdo;
+            tdo_ref <= tdovector[i];
+        end
+    end
+    $display("INTEST test completed %d cycles with %d errors.", cc+1, errors);
+
     //$finish;
     $stop;
 end

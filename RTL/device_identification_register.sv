@@ -9,8 +9,6 @@ module device_identification_register (
     output tdo
 );
 
-assert property (@(negedge clockDR) captureDR |-> shift_reg[0] == 1'b1) else $error("Violation IEEE 1149.1-2013 12.1.1: LSB of identification code must be 1. ID: %b. Shift reg[0]: %b", device_id[0], shift_reg[0]);
-
 localparam device_id = `DEVICE_ID;
 logic [32:0] shift_reg;
 assign shift_reg[32] = tdi;
@@ -24,8 +22,9 @@ for (i = 0; i < 32; i = i + 1) begin
         end else begin
             shift_reg[i] <= shift_reg[i+1];
         end
-
     end
 end
+
+assert property (@(negedge clockDR) captureDR |-> shift_reg[0] == 1'b1) else $error("Violation IEEE 1149.1-2013 12.1.1: LSB of identification code must be 1.");
 
 endmodule // device_identification_register

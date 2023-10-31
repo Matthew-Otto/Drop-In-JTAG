@@ -36,6 +36,7 @@ always_comb begin
         `E_BYPASS         : decoded <= `D_BYPASS;
         `E_SAMPLE_PRELOAD : decoded <= `D_SAMPLE_PRELOAD;
         `E_EXTEST         : decoded <= `D_EXTEST;
+        `E_INTEST         : decoded <= `D_INTEST;
         `E_IDCODE         : decoded <= `D_IDCODE;
         `E_CLAMP          : decoded <= `D_CLAMP;
         `E_IC_RESET       : decoded <= `D_IC_RESET;
