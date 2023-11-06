@@ -5,7 +5,6 @@ module instruction_register (
     input                          tdi,
     input                          tl_reset, 
     input                          captureIR,
-    input                          shiftIR,
     input                          updateIR,
     output                         tdo,
     output logic [`INST_COUNT-1:0] instructions
@@ -40,6 +39,7 @@ always_comb begin
         `E_IDCODE         : decoded <= `D_IDCODE;
         `E_CLAMP          : decoded <= `D_CLAMP;
         `E_IC_RESET       : decoded <= `D_IC_RESET;
+        default           : decoded <= 'bx;
     endcase
 end
 

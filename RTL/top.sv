@@ -8,8 +8,8 @@ module top (
     output tdo,
 
     // dut logic
-    input a,b,c,
-    output sum,carry
+    (* mark_debug = "true" *) input a,b,c,
+    (* mark_debug = "true" *) output sum,carry
 );
 
 logic bsr_tdi, bsr_clk, bsr_update, bsr_shift, bsr_enable, bsr_mode, bsr_tdo;

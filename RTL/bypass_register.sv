@@ -5,7 +5,7 @@ module bypass_register (
     output logic tdo
 );
 
-always @(clockDR) begin
+always @(posedge clockDR) begin
     tdo <= tdi & shiftDR;   // 10.1.1 (b)
 end
 

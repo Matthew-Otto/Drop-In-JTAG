@@ -68,7 +68,6 @@ instruction_register ir (
     .tck_ir(ir_clk), 
     .tdi(tdi_ir),
     .tl_reset(reset),
-    .shiftIR(shiftIR),
     .captureIR(captureIR),
     .updateIR(updateIR),
     .tdo(tdo_ir),
@@ -123,7 +122,8 @@ always_comb begin
         `D_EXTEST,
         `D_INTEST,
         `D_CLAMP           : tdo_dr <= bsr_tdo;
-        //D_IC_RESET        : tdo_dr <= 
+        //D_IC_RESET        : tdo_dr = 
+        default            : tdo_dr <= 1'bx;
     endcase
 end
 

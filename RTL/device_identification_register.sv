@@ -16,12 +16,8 @@ assign tdo = shift_reg[0];
 
 genvar i;
 for (i = 0; i < 32; i = i + 1) begin
-    always @(posedge clockDR) begin 
-        if (captureDR) begin
-            shift_reg[i] <= device_id[i];  // 12.1.1 (d)
-        end else begin
-            shift_reg[i] <= shift_reg[i+1];
-        end
+    always @(posedge clockDR) begin
+        shift_reg[i] <= captureDR ? device_id[i] : shift_reg[i+1];
     end
 end
 
