@@ -1,0 +1,17 @@
+!Disable Test Reset line
+TRST OFF;
+!End IR scans in IDLE
+ENDIR IDLE;
+!End DR scans in IDLE
+ENDDR IDLE;
+
+! scan IDCODE
+SIR 4 TDI (1);
+SDR 32 TDI(0) TDO(DEADBEEF);
+
+! override output to be 3
+SIR 4 TDI (4); ! intest
+SDR 5 TDI (3);
+
+!Go to stable state DRPAUSE
+STATE DRPAUSE;

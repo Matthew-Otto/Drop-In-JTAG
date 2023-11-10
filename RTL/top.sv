@@ -5,7 +5,7 @@
 module top (    
     // jtag logic
     (* mark_debug = "true" *) input tck,tdi,tms,trst,
-    output tdo,
+    (* mark_debug = "true" *) output tdo,
 
     // dut logic
     (* mark_debug = "true" *) input a,b,c,
