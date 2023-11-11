@@ -122,7 +122,6 @@ always_comb begin
         `D_EXTEST,
         `D_INTEST,
         `D_CLAMP           : tdo_dr <= bsr_tdo;
-        //D_IC_RESET        : tdo_dr = 
         default            : tdo_dr <= 1'bx;
     endcase
 end
