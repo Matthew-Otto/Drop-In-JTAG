@@ -1,0 +1,6 @@
+! sample/preload
+SIR 3 TDI (2);
+SDR 5 TDI(0) TDO(0);
+
+! goto reset
+STATE IDLE;
