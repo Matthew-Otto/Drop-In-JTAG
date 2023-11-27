@@ -8,18 +8,28 @@ module top (
     (* mark_debug = "true" *) output tdo,
 
     // dut logic
-    (* mark_debug = "true" *) input a,b,c,
-    (* mark_debug = "true" *) output sum,carry
+    input sysclk,
+    input reset,
+    output logic [31:0] PCF,
+    input  logic [31:0] InstrF,
+    output logic 	    MemWriteM,
+    output logic [31:0] ALUResultM, WriteDataM,
+    input  logic [31:0] ReadDataM
 );
+
+logic [6:0] bsr_chain;
 
 logic bsr_tdi, bsr_clk, bsr_update, bsr_shift, bsr_enable, bsr_mode, bsr_tdo;
 
-logic [4:0] system_io;
-logic [4:0] logic_io; // TODO update name to match spec
-logic [5:0] bsr;
+logic [31:0] PCF_internal;
+logic [31:0] InstrF_internal;
+logic 	     MemWriteM_internal;
+logic [31:0] ALUResultM_internal;
+logic [31:0] WriteDataM_internal;
+logic [31:0] ReadDataM_internal;
 
-assign bsr[0] = bsr_tdi;
-assign bsr_tdo = bsr[5];
+assign bsr_chain[0] = bsr_tdi;
+assign bsr_tdo = bsr_chain[6];
 
 // test logic ////////////////////////////////////////////////////
 
@@ -37,43 +47,85 @@ jtag_test_logic jtag (
     .bsr_tdo(bsr_tdo)
 );
 
-// boundary scan /////////////////////////////////////////////////
+// RISC-V Core ///////////////////////////////////////////////////
 
-assign system_io[0] = a;
-assign system_io[1] = b;
-assign system_io[2] = c;
-assign sum = system_io[3];
-assign carry = system_io[4];
+riscv core (
+    .clk(sysclk),
+    .reset(reset),
+    .PCF(PCF_internal),
+    .InstrF(InstrF_internal),
+    .MemWriteM(MemWriteM_internal),
+    .ALUResultM(ALUResultM_internal),
+    .WriteDataM(WriteDataM_internal),
+    .ReadDataM(ReadDataM_internal)
+);
 
-genvar i;
-for (i=0; i<3; i=i+1) begin
-    bsr_cell bsr_in (.clk(bsr_clk),
-                     .update_dr(bsr_update),
-                     .shift_dr(bsr_shift),
-                     .mode(bsr_mode),
-                     .parallel_in(system_io[i]),
-                     .parallel_out(logic_io[i]),
-                     .sequential_in(bsr[i]),
-                     .sequential_out(bsr[i+1]));
-end
+// boundary scan registers ///////////////////////////////////////
 
-for (i=3; i<5; i=i+1) begin
-    bsr_cell bsr_out (.clk(bsr_clk),
-                      .update_dr(bsr_update),
-                      .shift_dr(bsr_shift),
-                      .mode(bsr_mode),
-                      .parallel_in(logic_io[i]),
-                      .parallel_out(system_io[i]),
-                      .sequential_in(bsr[i]),
-                      .sequential_out(bsr[i+1]));
-end
+bsr #(.WIDTH(32)) PCF_bsr (
+    .clk(sysclk),
+    .update_dr(bsr_update),
+    .shift_dr(bsr_shift),
+    .mode(bsr_mode),
+    .tdi(bsr_chain[0]),
+    .tdo(bsr_chain[1]),
+    .parallel_in(PCF_internal),
+    .parallel_out(PCF)
+);
 
-// dut logic /////////////////////////////////////////////////////
+bsr #(.WIDTH(32)) InstrF_bsr (
+    .clk(sysclk),
+    .update_dr(bsr_update),
+    .shift_dr(bsr_shift),
+    .mode(bsr_mode),
+    .tdi(bsr_chain[1]),
+    .tdo(bsr_chain[2]),
+    .parallel_in(InstrF),
+    .parallel_out(InstrF_internal)
+);
 
-full_adder fa (.a(logic_io[0]),
-               .b(logic_io[1]),
-               .carry_in(logic_io[2]),
-               .sum(logic_io[3]),
-               .carry_out(logic_io[4]));
+bsr #(.WIDTH(1)) MemWriteM_bsr (
+    .clk(sysclk),
+    .update_dr(bsr_update),
+    .shift_dr(bsr_shift),
+    .mode(bsr_mode),
+    .tdi(bsr_chain[2]),
+    .tdo(bsr_chain[3]),
+    .parallel_in(MemWriteM_internal),
+    .parallel_out(MemWriteM)
+);
+
+bsr #(.WIDTH(32)) ALUResultM_bsr (
+    .clk(sysclk),
+    .update_dr(bsr_update),
+    .shift_dr(bsr_shift),
+    .mode(bsr_mode),
+    .tdi(bsr_chain[3]),
+    .tdo(bsr_chain[4]),
+    .parallel_in(ALUResultM_internal),
+    .parallel_out(ALUResultM)
+);
+
+bsr #(.WIDTH(32)) WriteDataM_bsr (
+    .clk(sysclk),
+    .update_dr(bsr_update),
+    .shift_dr(bsr_shift),
+    .mode(bsr_mode),
+    .tdi(bsr_chain[4]),
+    .tdo(bsr_chain[5]),
+    .parallel_in(WriteDataM_internal),
+    .parallel_out(WriteDataM)
+);
+
+bsr #(.WIDTH(32)) ReadDataM_bsr (
+    .clk(sysclk),
+    .update_dr(bsr_update),
+    .shift_dr(bsr_shift),
+    .mode(bsr_mode),
+    .tdi(bsr_chain[5]),
+    .tdo(bsr_chain[6]),
+    .parallel_in(ReadDataM),
+    .parallel_out(ReadDataM_internal)
+);
 
 endmodule // top
