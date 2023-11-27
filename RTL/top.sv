@@ -9,24 +9,19 @@ module top (
 
     // dut logic
     input sysclk,
-    input reset,
-    output logic [31:0] PCF,
-    input  logic [31:0] InstrF,
-    output logic 	    MemWriteM,
-    output logic [31:0] ALUResultM, WriteDataM,
-    input  logic [31:0] ReadDataM
+    input reset
 );
 
 logic [6:0] bsr_chain;
 
 logic bsr_tdi, bsr_clk, bsr_update, bsr_shift, bsr_enable, bsr_mode, bsr_tdo;
 
-logic [31:0] PCF_internal;
-logic [31:0] InstrF_internal;
-logic 	     MemWriteM_internal;
-logic [31:0] ALUResultM_internal;
-logic [31:0] WriteDataM_internal;
-logic [31:0] ReadDataM_internal;
+logic [31:0] PCF, PCF_internal;
+logic [31:0] InstrF, InstrF_internal;
+logic 	     MemWriteM, MemWriteM_internal;
+logic [31:0] DataAdrM, DataAdrM_internal;
+logic [31:0] WriteDataM, WriteDataM_internal;
+logic [31:0] ReadDataM, ReadDataM_internal;
 
 assign bsr_chain[0] = bsr_tdi;
 assign bsr_tdo = bsr_chain[6];
@@ -55,12 +50,18 @@ riscv core (
     .PCF(PCF_internal),
     .InstrF(InstrF_internal),
     .MemWriteM(MemWriteM_internal),
-    .ALUResultM(ALUResultM_internal),
+    .ALUResultM(DataAdrM_internal),
     .WriteDataM(WriteDataM_internal),
     .ReadDataM(ReadDataM_internal)
 );
 
+// Core memory
+
+imem imem (PCF, InstrF);
+dmem dmem (sysclk, MemWriteM, DataAdrM, WriteDataM, ReadDataM);
+
 // boundary scan registers ///////////////////////////////////////
+
 
 bsr #(.WIDTH(32)) PCF_bsr (
     .clk(sysclk),
@@ -95,15 +96,15 @@ bsr #(.WIDTH(1)) MemWriteM_bsr (
     .parallel_out(MemWriteM)
 );
 
-bsr #(.WIDTH(32)) ALUResultM_bsr (
+bsr #(.WIDTH(32)) DataAdrM_bsr (
     .clk(sysclk),
     .update_dr(bsr_update),
     .shift_dr(bsr_shift),
     .mode(bsr_mode),
     .tdi(bsr_chain[3]),
     .tdo(bsr_chain[4]),
-    .parallel_in(ALUResultM_internal),
-    .parallel_out(ALUResultM)
+    .parallel_in(DataAdrM_internal),
+    .parallel_out(DataAdrM)
 );
 
 bsr #(.WIDTH(32)) WriteDataM_bsr (
@@ -127,5 +128,6 @@ bsr #(.WIDTH(32)) ReadDataM_bsr (
     .parallel_in(ReadDataM),
     .parallel_out(ReadDataM_internal)
 );
+
 
 endmodule // top

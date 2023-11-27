@@ -11,12 +11,6 @@ logic tck, trst, tms, tdi, tdo;
 logic tdo_ref, tdo_sample;
 logic clk;
 logic reset;
-logic [31:0] PCF;
-logic [31:0] InstrF;
-logic MemWriteM;
-logic [31:0] DataAdrM;
-logic [31:0] WriteDataM;
-logic [31:0] ReadDataM;
 
 
 top dut (
@@ -26,23 +20,14 @@ top dut (
     .trst(trst),
     .tdo(tdo),
     .sysclk(clk),
-    .reset(reset),
-    .PCF(PCF),
-    .InstrF(InstrF),
-    .MemWriteM(MemWriteM),
-    .ALUResultM(DataAdrM),
-    .WriteDataM(WriteDataM),
-    .ReadDataM(ReadDataM)
+    .reset(reset)
 );
-
-imem imem (PCF, InstrF);
-dmem dmem (clk, MemWriteM, DataAdrM, WriteDataM, ReadDataM);
 
 
 initial begin
     string memfilename;
     memfilename = {"../RISCV_pipe/riscvtest/riscvtest.memfile"};
-    $readmemh(memfilename, imem.RAM);
+    $readmemh(memfilename, dut.imem.RAM);
 end
 
 
@@ -68,11 +53,11 @@ end
 
 // check results
 always @(negedge clk) begin
-    if (MemWriteM) begin
-        if(DataAdrM === 100 & WriteDataM === 25) begin
+    if (dut.MemWriteM) begin
+        if(dut.DataAdrM === 100 & dut.WriteDataM === 25) begin
             $display("Simulation succeeded");
             $stop;
-        end else if (DataAdrM !== 96) begin
+        end else if (dut.DataAdrM !== 96) begin
             $display("Simulation failed");
             $stop;
         end
