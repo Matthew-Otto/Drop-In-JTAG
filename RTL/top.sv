@@ -92,7 +92,7 @@ dmem dmem (sysclk, MemWriteM, DataAdrM, WriteDataM, ReadDataM);
 
 
 bsr #(.WIDTH(32)) PCF_bsr (
-    .clk(sysclk),
+    .clk(bsr_clk),
     .update_dr(bsr_update),
     .shift_dr(bsr_shift),
     .mode(bsr_mode),
@@ -103,7 +103,7 @@ bsr #(.WIDTH(32)) PCF_bsr (
 );
 
 bsr #(.WIDTH(32)) InstrF_bsr (
-    .clk(sysclk),
+    .clk(bsr_clk),
     .update_dr(bsr_update),
     .shift_dr(bsr_shift),
     .mode(bsr_mode),
@@ -114,7 +114,7 @@ bsr #(.WIDTH(32)) InstrF_bsr (
 );
 
 bsr #(.WIDTH(1)) MemWriteM_bsr (
-    .clk(sysclk),
+    .clk(bsr_clk),
     .update_dr(bsr_update),
     .shift_dr(bsr_shift),
     .mode(bsr_mode),
@@ -125,7 +125,7 @@ bsr #(.WIDTH(1)) MemWriteM_bsr (
 );
 
 bsr #(.WIDTH(32)) DataAdrM_bsr (
-    .clk(sysclk),
+    .clk(bsr_clk),
     .update_dr(bsr_update),
     .shift_dr(bsr_shift),
     .mode(bsr_mode),
@@ -136,7 +136,7 @@ bsr #(.WIDTH(32)) DataAdrM_bsr (
 );
 
 bsr #(.WIDTH(32)) WriteDataM_bsr (
-    .clk(sysclk),
+    .clk(bsr_clk),
     .update_dr(bsr_update),
     .shift_dr(bsr_shift),
     .mode(bsr_mode),
@@ -147,7 +147,7 @@ bsr #(.WIDTH(32)) WriteDataM_bsr (
 );
 
 bsr #(.WIDTH(32)) ReadDataM_bsr (
-    .clk(sysclk),
+    .clk(bsr_clk),
     .update_dr(bsr_update),
     .shift_dr(bsr_shift),
     .mode(bsr_mode),

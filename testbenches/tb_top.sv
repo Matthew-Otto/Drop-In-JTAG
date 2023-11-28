@@ -1,11 +1,8 @@
 // `timescale 1ns/1ps
 module testbench();
 
-integer i, cc, errors;
-logic [100:0] tmsvector;
-logic [100:0] tdivector;
-logic [100:0] c_vec;
-logic [100:0] tdovector;
+integer i, errors;
+
 
 logic tck, trst, tms, tdi, tdo;
 logic tdo_ref, tdo_sample;
@@ -20,17 +17,10 @@ top dut (
     .trst(trst),
     .tdo(tdo),
     .sysclk(clk),
-    .reset(reset)
+    .reset(reset),
+    .success(),
+    .fail()
 );
-
-
-/*
-initial begin
-    string memfilename;
-    memfilename = {"../RISCV_pipe/riscvtest/riscvtest.memfile"};
-    $readmemh(memfilename, dut.imem.RAM);
-end
-*/
 
 
 // clocks
@@ -46,6 +36,9 @@ end
 
 // initialize test
 initial begin
+    tms = 1'b1;
+    tdi = 1'b1;
+
     reset <= 1; 
     trst <= 0;
     # 22;
@@ -54,6 +47,7 @@ initial begin
 end
 
 // check results
+/*
 always @(negedge clk) begin
     if (dut.MemWriteM) begin
         if(dut.DataAdrM === 100 & dut.WriteDataM === 25) begin
@@ -64,6 +58,56 @@ always @(negedge clk) begin
             $stop;
         end
     end
+end
+*/
+
+
+
+initial begin
+    logic [160:0] tdovector;
+    static logic [13:0] sp_tmsvector = 'b1101100_001_1100;
+    static logic [13:0] sp_tdivector = 'b0000000_010_0000; // LSB first
+
+
+    while (1) begin
+        @(negedge clk) begin
+            if (dut.MemWriteM) begin
+                if(dut.DataAdrM === 100 & dut.WriteDataM === 25) begin
+                    $display("Simulation succeeded");
+                    break;
+                end else if (dut.DataAdrM !== 96) begin
+                    $display("Simulation failed");
+                    break;
+                end
+            end
+        end
+    end
+
+
+    $display("putting TAP in SAMPLE/PRELOAD");
+    for (i=13; i >= 0; i=i-1) begin
+        @(negedge tck) begin
+            tms <= sp_tmsvector[i];
+            tdi <= sp_tdivector[i];
+        end
+    end
+
+    $display("Scanning DR register");
+    for (i=161; i >= 0; i=i-1) begin
+        @(negedge tck) begin
+            tdovector[i] <= tdo;
+        end
+    end
+
+    $display("Returning to test-logic reset");
+    for (i=0; i<10; i=i+1) begin
+        @(negedge tck) begin
+            tdi <= 1;
+        end
+    end
+
+    $display("ReadDataM: %h | WriteDataM %h | DataAdrM: %h | MemWriteM: %b | InstrF: %h | PCF: %h", tdovector[160:129],tdovector[128:97],tdovector[96:64],tdovector[64:64],tdovector[63:32],tdovector[31:0]);
+    $stop;
 end
 
 endmodule // testbench
