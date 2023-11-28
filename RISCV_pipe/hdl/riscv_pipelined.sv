@@ -521,10 +521,17 @@ module mux3 #(parameter WIDTH = 8)
    assign y = s[1] ? d2 : (s[0] ? d1 : d0); 
 endmodule
 
-module imem (input  logic [31:0] a,
-	     output logic [31:0] rd);
+module imem #(parameter MEM_INIT_FILE)
+    (input  logic [31:0] a,
+	   output logic [31:0] rd);
    
    logic [31:0] 		 RAM[63:0];
+
+   initial begin
+      if (MEM_INIT_FILE != "") begin
+        $readmemh(MEM_INIT_FILE, RAM);
+      end
+   end
    
    assign rd = RAM[a[31:2]]; // word aligned
    

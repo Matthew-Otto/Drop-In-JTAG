@@ -24,11 +24,13 @@ top dut (
 );
 
 
+/*
 initial begin
     string memfilename;
     memfilename = {"../RISCV_pipe/riscvtest/riscvtest.memfile"};
     $readmemh(memfilename, dut.imem.RAM);
 end
+*/
 
 
 // clocks

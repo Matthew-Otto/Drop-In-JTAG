@@ -57,7 +57,7 @@ riscv core (
 
 // Core memory
 
-imem imem (PCF, InstrF);
+imem #(.MEM_INIT_FILE("../RISCV_pipe/riscvtest/riscvtest.mem")) imem (PCF, InstrF);
 dmem dmem (sysclk, MemWriteM, DataAdrM, WriteDataM, ReadDataM);
 
 // boundary scan registers ///////////////////////////////////////
