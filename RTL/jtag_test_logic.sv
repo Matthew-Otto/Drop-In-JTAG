@@ -18,7 +18,6 @@ logic ir_clk;
 logic updateIR;
 logic shiftDR;
 logic captureDR;
-logic clockDR;
 logic clk_dr;
 logic updateDRstate;
 logic select;

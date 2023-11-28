@@ -50,7 +50,7 @@ end
 
 // fileout
 initial begin
-    handle3 = $fopen("fsm.out");	
+    handle3 = $fopen("fsm.out");    
     desc3 = handle3;
 end
 

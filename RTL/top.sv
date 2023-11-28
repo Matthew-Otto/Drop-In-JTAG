@@ -2,29 +2,57 @@
 //  alongside example system logic and boundary scan register
 
 
-module top (    
+module top #(parameter IMEM_INIT_FILE="../RISCV_pipe/riscvtest/riscvtest.mem") (    
     // jtag logic
     (* mark_debug = "true" *) input tck,tdi,tms,trst,
     (* mark_debug = "true" *) output tdo,
 
     // dut logic
     input sysclk,
-    input reset
+    (* mark_debug = "true" *) input reset,
+
+    (* mark_debug = "true" *) output logic success, fail  // PHY DEBUG
 );
 
 logic [6:0] bsr_chain;
 
-logic bsr_tdi, bsr_clk, bsr_update, bsr_shift, bsr_enable, bsr_mode, bsr_tdo;
+logic bsr_tdi, bsr_clk, bsr_update, bsr_shift, bsr_mode, bsr_tdo;
 
-logic [31:0] PCF, PCF_internal;
-logic [31:0] InstrF, InstrF_internal;
-logic 	     MemWriteM, MemWriteM_internal;
-logic [31:0] DataAdrM, DataAdrM_internal;
-logic [31:0] WriteDataM, WriteDataM_internal;
-logic [31:0] ReadDataM, ReadDataM_internal;
+(* mark_debug = "true" *) logic [31:0] PCF;
+(* mark_debug = "true" *) logic [31:0] InstrF;
+(* mark_debug = "true" *) logic        MemWriteM;
+(* mark_debug = "true" *) logic [31:0] DataAdrM;
+(* mark_debug = "true" *) logic [31:0] WriteDataM;
+(* mark_debug = "true" *) logic [31:0] ReadDataM;
+
+logic [31:0] PCF_internal;
+logic [31:0] InstrF_internal;
+logic        MemWriteM_internal;
+logic [31:0] DataAdrM_internal;
+logic [31:0] WriteDataM_internal;
+logic [31:0] ReadDataM_internal;
 
 assign bsr_chain[0] = bsr_tdi;
 assign bsr_tdo = bsr_chain[6];
+
+// PHY DEBUG
+
+always @(posedge sysclk or posedge reset) begin
+    if (reset) begin
+        success <= 0;
+        fail <= 0;
+    end else if (MemWriteM) begin
+        if(DataAdrM === 100 & WriteDataM === 25) begin
+            success <= 1;
+        end else if (DataAdrM !== 96) begin
+            fail <= 1;
+        end
+    end
+end
+
+// end PHY DEBUG
+
+
 
 // test logic ////////////////////////////////////////////////////
 
@@ -57,7 +85,7 @@ riscv core (
 
 // Core memory
 
-imem #(.MEM_INIT_FILE("../RISCV_pipe/riscvtest/riscvtest.mem")) imem (PCF, InstrF);
+imem #(.MEM_INIT_FILE(IMEM_INIT_FILE)) imem (PCF, InstrF);
 dmem dmem (sysclk, MemWriteM, DataAdrM, WriteDataM, ReadDataM);
 
 // boundary scan registers ///////////////////////////////////////
