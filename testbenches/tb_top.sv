@@ -46,27 +46,16 @@ initial begin
     trst <= 1;
 end
 
-// check results
-/*
-always @(negedge clk) begin
-    if (dut.MemWriteM) begin
-        if(dut.DataAdrM === 100 & dut.WriteDataM === 25) begin
-            $display("Simulation succeeded");
-            $stop;
-        end else if (dut.DataAdrM !== 96) begin
-            $display("Simulation failed");
-            $stop;
-        end
-    end
-end
-*/
-
 
 
 initial begin
     logic [160:0] tdovector;
-    static logic [13:0] sp_tmsvector = 'b1101100_001_1100;
-    static logic [13:0] sp_tdivector = 'b0000000_010_0000; // LSB first
+
+    static logic [11:0] halt_tmsvector = 'b101100_0001_10;
+    static logic [11:0] halt_tdivector = 'b000000_0110_00; // LSB first
+
+    static logic [11:0] sp_tmsvector = 'B1100_0001_1100;
+    static logic [11:0] sp_tdivector = 'b0000_0100_0000; // LSB first
 
 
     while (1) begin
@@ -83,9 +72,16 @@ initial begin
         end
     end
 
+    $display("HALTing system logic");
+    for (i=11; i >= 0; i=i-1) begin
+        @(negedge tck) begin
+            tms <= halt_tmsvector[i];
+            tdi <= halt_tdivector[i];
+        end
+    end
 
     $display("putting TAP in SAMPLE/PRELOAD");
-    for (i=13; i >= 0; i=i-1) begin
+    for (i=11; i >= 0; i=i-1) begin
         @(negedge tck) begin
             tms <= sp_tmsvector[i];
             tdi <= sp_tdivector[i];

@@ -6,7 +6,10 @@ module jtag_test_logic (
 
     output bsr_tdi, bsr_clk, bsr_update,
     output bsr_shift, bsr_mode,
-    input bsr_tdo
+    input bsr_tdo,
+
+    input sys_clk,
+    output dbg_clk
 );
 
 // TAP controller logic
@@ -29,6 +32,10 @@ logic sample_preload;
 logic extest;
 logic intest;
 logic clamp;
+
+logic halt;
+logic step;
+logic resume;
 
 // intermediate wires
 logic tdi_ir, tdi_dr;
@@ -81,6 +88,9 @@ assign extest         = (instructions == `D_EXTEST);
 assign intest         = (instructions == `D_INTEST);
 assign clamp          = (instructions == `D_CLAMP);
 
+assign halt           = (instructions == `D_HALT);
+assign step           = (instructions == `D_STEP);
+assign resume         = (instructions == `D_RESUME);
 
 // Data Registers
 
@@ -125,5 +135,48 @@ always_comb begin
     endcase
 end
 
+
+// Debug Core
+
+logic clk_en;
+logic [1:0] debug_state;
+
+localparam
+    RUN  = 2'b00,
+    HALT = 2'b01,
+    STEP = 2'b10;     
+
+assign dbg_clk = sys_clk & clk_en;
+
+always @(posedge tck, negedge trst) begin
+    if (~trst) begin
+        debug_state <= RUN;
+        clk_en <= 1;
+    end else begin
+        case (debug_state)
+            RUN : begin
+                if (halt) begin
+                    clk_en <= 0;
+                    debug_state <= HALT;
+                end
+            end
+
+            HALT : begin
+                if (step) begin
+                    clk_en <= 1;
+                    debug_state <= STEP;
+                end else if (resume) begin
+                    clk_en <= 1;
+                    debug_state <= RUN;
+                end
+            end
+
+            STEP : begin
+                clk_en <= 0;
+                debug_state <= HALT;
+            end
+        endcase
+    end
+end
 
 endmodule

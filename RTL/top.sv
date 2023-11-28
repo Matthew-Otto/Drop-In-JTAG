@@ -18,6 +18,8 @@ logic [6:0] bsr_chain;
 
 logic bsr_tdi, bsr_clk, bsr_update, bsr_shift, bsr_mode, bsr_tdo;
 
+logic dbgclk;
+
 (* mark_debug = "true" *) logic [31:0] PCF;
 (* mark_debug = "true" *) logic [31:0] InstrF;
 (* mark_debug = "true" *) logic        MemWriteM;
@@ -67,13 +69,15 @@ jtag_test_logic jtag (
     .bsr_update(bsr_update),
     .bsr_shift(bsr_shift),
     .bsr_mode(bsr_mode),
-    .bsr_tdo(bsr_tdo)
+    .bsr_tdo(bsr_tdo),
+    .sys_clk(sysclk),
+    .dbg_clk(dbgclk)
 );
 
 // RISC-V Core ///////////////////////////////////////////////////
 
 riscv core (
-    .clk(sysclk),
+    .clk(dbgclk),
     .reset(reset),
     .PCF(PCF_internal),
     .InstrF(InstrF_internal),
@@ -86,7 +90,7 @@ riscv core (
 // Core memory
 
 imem #(.MEM_INIT_FILE(IMEM_INIT_FILE)) imem (PCF, InstrF);
-dmem dmem (sysclk, MemWriteM, DataAdrM, WriteDataM, ReadDataM);
+dmem dmem (dbgclk, MemWriteM, DataAdrM, WriteDataM, ReadDataM);
 
 // boundary scan registers ///////////////////////////////////////
 

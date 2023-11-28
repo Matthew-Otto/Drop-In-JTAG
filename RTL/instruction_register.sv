@@ -38,6 +38,9 @@ always_comb begin
         `E_INTEST         : decoded <= `D_INTEST;
         `E_IDCODE         : decoded <= `D_IDCODE;
         `E_CLAMP          : decoded <= `D_CLAMP;
+        `E_HALT           : decoded <= `D_HALT;
+        `E_STEP           : decoded <= `D_STEP;
+        `E_RESUME         : decoded <= `D_RESUME;
         default           : decoded <= 'bx;
     endcase
 end
