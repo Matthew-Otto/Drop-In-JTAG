@@ -13,8 +13,8 @@ module bsr #(parameter WIDTH) (
 
 logic [WIDTH:0] shift_reg;
 
-assign shift_reg[0] = tdi;
-assign tdo = shift_reg[WIDTH];
+assign shift_reg[WIDTH] = tdi;
+assign tdo = shift_reg[0];
 
 genvar i;
 for (i=0; i<WIDTH; i=i+1) begin
@@ -25,8 +25,8 @@ for (i=0; i<WIDTH; i=i+1) begin
         .mode(mode),
         .parallel_in(parallel_in[i]),
         .parallel_out(parallel_out[i]),
-        .sequential_in(shift_reg[i]),
-        .sequential_out(shift_reg[i+1])
+        .sequential_in(shift_reg[i+1]),
+        .sequential_out(shift_reg[i])
     );
 end
 
