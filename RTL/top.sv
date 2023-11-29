@@ -18,7 +18,7 @@ logic [6:0] bsr_chain;
 
 logic bsr_tdi, bsr_clk, bsr_update, bsr_shift, bsr_mode, bsr_tdo;
 
-logic dbgclk;
+(* mark_debug = "true" *) logic dbgclk;
 
 (* mark_debug = "true" *) logic [31:0] PCF;
 (* mark_debug = "true" *) logic [31:0] InstrF;

@@ -15,18 +15,18 @@ module jtag_test_logic (
 // TAP controller logic
 logic reset;
 logic tdo_en;
-logic shiftIR;
-logic captureIR;
-logic ir_clk;
-logic updateIR;
-logic shiftDR;
-logic captureDR;
-logic clk_dr;
-logic updateDRstate;
-logic select;
+(* mark_debug = "true" *) logic shiftIR;
+(* mark_debug = "true" *) logic captureIR;
+(* mark_debug = "true" *) logic ir_clk;
+(* mark_debug = "true" *) logic updateIR;
+(* mark_debug = "true" *) logic shiftDR;
+(* mark_debug = "true" *) logic captureDR;
+(* mark_debug = "true" *) logic clk_dr;
+(* mark_debug = "true" *) logic updateDRstate;
+(* mark_debug = "true" *) logic select;
 
 // instruction signals
-logic [`INST_COUNT-1:0] instructions;
+(* mark_debug = "true" *) logic [`INST_COUNT-1:0] instructions;
 logic idcode;
 logic sample_preload;
 logic extest;
@@ -136,47 +136,103 @@ always_comb begin
 end
 
 
-// Debug Core
+// Debug Core (sys_clk domain) ////////////////////////////////////////////////
 
-logic clk_en;
-logic [1:0] debug_state;
+(* mark_debug = "true" *) logic clk_en, clk_gate;
+(* mark_debug = "true" *) logic [1:0] debug_state;
+
+logic dbg_rst;
+logic dbg_halt;
+logic dbg_step;
+logic dbg_resume;
+
+cdc_sync_stb #(.RISING_EDGE(0)) dbgrst (.a(trst), .clk_b(sys_clk), .b(dbg_rst));
+cdc_sync_stb dbghalt (.a(halt), .clk_b(sys_clk), .b(dbg_halt));
+cdc_sync_stb dbgstep (.a(step), .clk_b(sys_clk), .b(dbg_step));
+cdc_sync_stb dbgresume (.a(resume), .clk_b(sys_clk), .b(dbg_resume));
+
+
+always @(negedge sys_clk)
+    clk_gate <= clk_en;
+
+assign dbg_clk = sys_clk & clk_gate;
 
 localparam
-    RUN  = 2'b00,
-    HALT = 2'b01,
-    STEP = 2'b10;     
+    DBGRUN  = 2'b00,
+    DBGHALT = 2'b01,
+    DBGSTEP = 2'b10;
 
-assign dbg_clk = sys_clk & clk_en;
-
-always @(posedge tck, negedge trst) begin
-    if (~trst) begin
-        debug_state <= RUN;
+always @(posedge sys_clk, negedge dbg_rst) begin
+    if (~dbg_rst) begin
+        debug_state <= DBGRUN;
         clk_en <= 1;
     end else begin
         case (debug_state)
-            RUN : begin
-                if (halt) begin
+            DBGRUN : begin
+                if (dbg_halt) begin
                     clk_en <= 0;
-                    debug_state <= HALT;
+                    debug_state <= DBGHALT;
                 end
             end
 
-            HALT : begin
-                if (step) begin
+            DBGHALT : begin
+                if (dbg_step) begin
                     clk_en <= 1;
-                    debug_state <= STEP;
-                end else if (resume) begin
+                    debug_state <= DBGSTEP;
+                end else if (dbg_resume) begin
                     clk_en <= 1;
-                    debug_state <= RUN;
+                    debug_state <= DBGRUN;
                 end
             end
 
-            STEP : begin
+            DBGSTEP : begin
                 clk_en <= 0;
-                debug_state <= HALT;
+                debug_state <= DBGHALT;
             end
         endcase
     end
 end
 
-endmodule
+endmodule  // jtag_test_logic
+
+
+module cdc_sync_stb #(
+    parameter RISING_EDGE = 1
+)(
+    input a,
+    input clk_b,
+    output logic b
+);
+
+logic sync1, sync2;
+logic lock;
+
+initial
+    lock = 0;
+
+always @(posedge clk_b) begin
+    sync1 <= a;
+    sync2 <= sync1;
+
+    if (RISING_EDGE) begin
+        if (sync2 && ~lock) begin
+            lock <= 1;
+            b <= 1;
+        end
+        if (b)
+            b <= 0;
+        if (~sync2)
+            lock <= 0;
+    end else begin
+        if (~sync2 && ~lock) begin
+            lock <= 1;
+            b <= 0;
+        end
+        if (~b)
+            b <= 1;
+        if (sync2)
+            lock <= 0;
+    end
+end
+
+endmodule  // cdc_sync
