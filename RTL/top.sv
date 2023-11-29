@@ -9,7 +9,7 @@ module top #(parameter IMEM_INIT_FILE="../RISCV_pipe/riscvtest/riscvtest.mem") (
 
     // dut logic
     input sysclk,
-    (* mark_debug = "true" *) input reset,
+    (* mark_debug = "true" *) input sys_reset,
 
     (* mark_debug = "true" *) output logic success, fail  // PHY DEBUG
 );
@@ -19,6 +19,8 @@ logic [6:0] bsr_chain;
 logic bsr_tdi, bsr_clk, bsr_update, bsr_shift, bsr_mode, bsr_tdo;
 
 (* mark_debug = "true" *) logic dbgclk;
+(* mark_debug = "true" *) logic dm_reset;
+(* mark_debug = "true" *) logic reset;
 
 (* mark_debug = "true" *) logic [31:0] PCF;
 (* mark_debug = "true" *) logic [31:0] InstrF;
@@ -33,6 +35,8 @@ logic        MemWriteM_internal;
 logic [31:0] DataAdrM_internal;
 logic [31:0] WriteDataM_internal;
 logic [31:0] ReadDataM_internal;
+
+assign reset = sys_reset || dm_reset;
 
 assign bsr_chain[0] = bsr_tdi;
 assign bsr_tdo = bsr_chain[6];
@@ -71,7 +75,8 @@ jtag_test_logic jtag (
     .bsr_mode(bsr_mode),
     .bsr_tdo(bsr_tdo),
     .sys_clk(sysclk),
-    .dbg_clk(dbgclk)
+    .dbg_clk(dbgclk),
+    .dm_reset(dm_reset)
 );
 
 // RISC-V Core ///////////////////////////////////////////////////

@@ -3,3 +3,4 @@ wlf*
 transcript*
 work/
 *.out
+*.dbg

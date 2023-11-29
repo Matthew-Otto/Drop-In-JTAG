@@ -9,24 +9,25 @@ module jtag_test_logic (
     input bsr_tdo,
 
     input sys_clk,
-    output dbg_clk
+    output dbg_clk,
+    output dm_reset
 );
 
 // TAP controller logic
 logic reset;
 logic tdo_en;
-(* mark_debug = "true" *) logic shiftIR;
-(* mark_debug = "true" *) logic captureIR;
-(* mark_debug = "true" *) logic ir_clk;
-(* mark_debug = "true" *) logic updateIR;
-(* mark_debug = "true" *) logic shiftDR;
-(* mark_debug = "true" *) logic captureDR;
-(* mark_debug = "true" *) logic clk_dr;
-(* mark_debug = "true" *) logic updateDRstate;
-(* mark_debug = "true" *) logic select;
+logic shiftIR;
+logic captureIR;
+logic ir_clk;
+logic updateIR;
+logic shiftDR;
+logic captureDR;
+logic clk_dr;
+logic updateDRstate;
+logic select;
 
 // instruction signals
-(* mark_debug = "true" *) logic [`INST_COUNT-1:0] instructions;
+logic [`INST_COUNT-1:0] instructions;
 logic idcode;
 logic sample_preload;
 logic extest;
@@ -36,6 +37,7 @@ logic clamp;
 logic halt;
 logic step;
 logic resume;
+logic logic_reset;
 
 // intermediate wires
 logic tdi_ir, tdi_dr;
@@ -89,8 +91,9 @@ assign intest         = (instructions == `D_INTEST);
 assign clamp          = (instructions == `D_CLAMP);
 
 assign halt           = (instructions == `D_HALT);
-assign step           = (instructions == `D_STEP);
+assign step           = (instructions == `D_STEP) && updateIR;
 assign resume         = (instructions == `D_RESUME);
+assign logic_reset    = (instructions == `D_RESET);
 
 // Data Registers
 
@@ -131,22 +134,23 @@ always_comb begin
         `D_EXTEST,
         `D_INTEST,
         `D_CLAMP           : tdo_dr <= bsr_tdo;
-        default            : tdo_dr <= 1'bx;
+        default            : tdo_dr <= tdo_br;  // BYPASS
     endcase
 end
 
 
 // Debug Core (sys_clk domain) ////////////////////////////////////////////////
 
-(* mark_debug = "true" *) logic clk_en, clk_gate;
-(* mark_debug = "true" *) logic [1:0] debug_state;
+logic clk_en, clk_gate;
+logic [1:0] debug_state;
 
 logic dbg_rst;
 logic dbg_halt;
 logic dbg_step;
 logic dbg_resume;
 
-cdc_sync_stb #(.RISING_EDGE(0)) dbgrst (.a(trst), .clk_b(sys_clk), .b(dbg_rst));
+cdc_sync_stb logicrst (.a(logic_reset), .clk_b(sys_clk), .b(dm_reset));
+cdc_sync_stb #(.RISING_EDGE(0)) dbgrst (.a(trst && reset), .clk_b(sys_clk), .b(dbg_rst));
 cdc_sync_stb dbghalt (.a(halt), .clk_b(sys_clk), .b(dbg_halt));
 cdc_sync_stb dbgstep (.a(step), .clk_b(sys_clk), .b(dbg_step));
 cdc_sync_stb dbgresume (.a(resume), .clk_b(sys_clk), .b(dbg_resume));

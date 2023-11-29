@@ -41,6 +41,7 @@ always_comb begin
         `E_HALT           : decoded <= `D_HALT;
         `E_STEP           : decoded <= `D_STEP;
         `E_RESUME         : decoded <= `D_RESUME;
+        `E_RESET          : decoded <= `D_RESET;
         default           : decoded <= 'bx;
     endcase
 end
