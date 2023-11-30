@@ -44,30 +44,22 @@ def main():
             instr("step") # toggle system clock once
             instr("sample_preload")
             data = boundary_scan()
-            if data["PC"] == "00000020":
+            if data["PC"] == "00000024":
                 # jump to next instruction
-                instr("step")
-                preload({"PC" : 50, "Instr" : "00210063"})
+                preload({"PC" : 28, "Instr" : "0023A233"})
                 instr("clamp")
-                instr("step")
-                preload({"MemWrite" : 1, "DataAdr" : "0x64", "WriteData" : "0x19"})
-                instr("clamp")
-                instr("step")
-                instr("resume")
+
                 break
 
-        exit()
 
         while True:
             instr("step") # toggle system clock once
             instr("sample_preload")
-            data = boundary_scan()
-            for k,v in data.items():
-                print(f"{k} : {v}")
+            if data["PC"] == "00000050":
+                instr("resume")
+                break
 
-
-
-        #trst()
+        trst()
 
 
 def trst():
