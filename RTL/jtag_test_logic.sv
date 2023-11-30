@@ -5,7 +5,7 @@ module jtag_test_logic (
     output tdo,
 
     output bsr_tdi, bsr_clk, bsr_update,
-    output bsr_shift, bsr_mode,
+    (* mark_debug = "true" *) output bsr_shift, bsr_mode,
     input bsr_tdo,
 
     input sys_clk,
@@ -32,11 +32,13 @@ logic idcode;
 logic sample_preload;
 logic extest;
 logic intest;
-logic clamp;
+(* mark_debug = "true" *) logic clamp;
+(* mark_debug = "true" *) logic clamp_last;
+(* mark_debug = "true" *) logic clamp_hold; // TODO: remove
 
-logic halt;
-logic step;
-logic resume;
+(* mark_debug = "true" *) logic halt;
+(* mark_debug = "true" *) logic step;
+(* mark_debug = "true" *) logic resume;
 logic logic_reset;
 
 // intermediate wires
@@ -91,7 +93,7 @@ assign intest         = (instructions == `D_INTEST);
 assign clamp          = (instructions == `D_CLAMP);
 
 assign halt           = (instructions == `D_HALT);
-assign step           = (instructions == `D_STEP) && updateIR;
+assign step           = (instructions == `D_STEP);
 assign resume         = (instructions == `D_RESUME);
 assign logic_reset    = (instructions == `D_RESET);
 
@@ -117,7 +119,7 @@ device_identification_register didr (
 logic bsr_enable;
 assign bsr_enable = (sample_preload || extest || intest || clamp);
 
-assign bsr_mode = (extest || intest || clamp);  // selects parallel output latches for BSR output
+assign bsr_mode = (extest || intest || clamp || (clamp_last && step));  // selects parallel output latches for BSR output
 
 assign bsr_tdi = bsr_enable ? tdi_dr : 1'bx;
 assign bsr_clk = clk_dr || ~bsr_enable;  // clock high when idle
@@ -138,6 +140,12 @@ always_comb begin
     endcase
 end
 
+// soft persistence clamp
+always @(posedge updateIR) begin
+    clamp_last <= clamp;
+end
+
+
 
 // Debug Core (sys_clk domain) ////////////////////////////////////////////////
 
@@ -152,7 +160,7 @@ logic dbg_resume;
 cdc_sync_stb logicrst (.a(logic_reset), .clk_b(sys_clk), .b(dm_reset));
 cdc_sync_stb #(.RISING_EDGE(0)) dbgrst (.a(trst && reset), .clk_b(sys_clk), .b(dbg_rst));
 cdc_sync_stb dbghalt (.a(halt), .clk_b(sys_clk), .b(dbg_halt));
-cdc_sync_stb dbgstep (.a(step), .clk_b(sys_clk), .b(dbg_step));
+cdc_sync_stb dbgstep (.a(step && updateIR), .clk_b(sys_clk), .b(dbg_step));
 cdc_sync_stb dbgresume (.a(resume), .clk_b(sys_clk), .b(dbg_resume));
 
 

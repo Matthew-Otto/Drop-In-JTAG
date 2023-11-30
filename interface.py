@@ -2,28 +2,18 @@ from telnetlib import Telnet
 
 # OpenOCD supports tcl, but I'd rather use python over telnet \//
 
+debug = True
 
-def main():
-    global tn
-    with Telnet("10.55.0.1", 4444) as tn:
-        a = read()
-        print(a)
-
-        a = execute("scan_chain")
-        print(a)
-
-        a = state("halt")
-        print(a)
-
-
-def state(state):
-    """Puts the TAP controller in the specified state"""
-    code = ir_codes[state.upper()]
-    if not code:
-        print("AAA")
-
-    return execute(f"irscan core.tap {code}")
-
+bsr_format = { # matches the position of the BSR, do not edit
+    "RF2" : 32,
+    "RF1" : 32,
+    "ReadData" : 32,
+    "WriteData" : 32,
+    "DataAdr" : 32,
+    "MemWrite" : 1,
+    "Instr" : 32,
+    "PC" : 32,
+}
 
 ir_codes = {
     "BYPASS"         : "0xf",
@@ -39,6 +29,88 @@ ir_codes = {
 }
 
 
+def main():
+    global tn
+    with Telnet("10.55.0.1", 4444) as tn:
+        read()
+
+        trst()
+
+        instr("halt") # stop system clock
+        instr("reset") # reset the core
+
+
+        while True:
+            instr("step") # toggle system clock once
+            instr("sample_preload")
+            data = boundary_scan()
+            if data["PC"] == "00000020":
+                # jump to next instruction
+                instr("step")
+                preload({"PC" : 50, "Instr" : "00210063"})
+                instr("clamp")
+                instr("step")
+                preload({"MemWrite" : 1, "DataAdr" : "0x64", "WriteData" : "0x19"})
+                instr("clamp")
+                instr("step")
+                instr("resume")
+                break
+
+        exit()
+
+        while True:
+            instr("step") # toggle system clock once
+            instr("sample_preload")
+            data = boundary_scan()
+            for k,v in data.items():
+                print(f"{k} : {v}")
+
+
+
+        #trst()
+
+
+def trst():
+    execute("pathmove RESET IDLE")
+
+
+def preload(scan_in):
+    """
+    scanning twice allows overwriting only a single register in the BSR chain
+    """
+    instr("sample_preload")
+    payload = boundary_scan()
+    for k,v in scan_in.items():
+        payload[k] = v
+
+    boundary_scan(scan_in=payload)
+    return payload
+
+
+def boundary_scan(scan_in=None):
+    payload = "drscan core.tap"
+
+    for reg, width in bsr_format.items():
+        if scan_in and reg in scan_in:
+            payload += f" {width} 0x{scan_in[reg]}"
+        else:
+            payload += f" {width} 0x0"
+
+    scan_out = execute(payload)
+
+    data = dict(zip(bsr_format.keys(), scan_out.split("\r\n")[1:]))
+
+    return data
+
+
+
+def instr(instruction):
+    """Load the specified instruction"""
+    code = ir_codes[instruction.upper()]
+
+    return execute(f"irscan core.tap {code}")
+
+
 def execute(cmd):
     write(cmd)
     return read()
@@ -49,11 +121,14 @@ def write(cmd):
 def read():
     data = b""
     while True:
-        rd = tn.read_until(b"\n", timeout=0.1)
+        rd = tn.read_until(b"\n", timeout=0.05)
         if not rd:
             break
         else:
             data += rd
+
+    if debug:
+        print(data.decode('ascii'))
 
     return data.decode('ascii')
 

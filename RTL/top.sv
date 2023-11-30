@@ -14,7 +14,7 @@ module top #(parameter IMEM_INIT_FILE="../RISCV_pipe/riscvtest/riscvtest.mem") (
     (* mark_debug = "true" *) output logic success, fail  // PHY DEBUG
 );
 
-logic [6:0] bsr_chain;
+logic [8:0] bsr_chain;
 
 logic bsr_tdi, bsr_clk, bsr_update, bsr_shift, bsr_mode, bsr_tdo;
 
@@ -28,18 +28,22 @@ logic bsr_tdi, bsr_clk, bsr_update, bsr_shift, bsr_mode, bsr_tdo;
 (* mark_debug = "true" *) logic [31:0] DataAdrM;
 (* mark_debug = "true" *) logic [31:0] WriteDataM;
 (* mark_debug = "true" *) logic [31:0] ReadDataM;
+(* mark_debug = "true" *) logic [31:0] RD1E;
+(* mark_debug = "true" *) logic [31:0] RD2E;
 
 logic [31:0] PCF_internal;
-logic [31:0] InstrF_internal;
+(* mark_debug = "true" *) logic [31:0] InstrF_internal;
 logic        MemWriteM_internal;
 logic [31:0] DataAdrM_internal;
 logic [31:0] WriteDataM_internal;
 logic [31:0] ReadDataM_internal;
+logic [31:0] RD1E_internal;
+logic [31:0] RD2E_internal;
 
 assign reset = sys_reset || dm_reset;
 
 assign bsr_chain[0] = bsr_tdi;
-assign bsr_tdo = bsr_chain[6];
+assign bsr_tdo = bsr_chain[8];
 
 // PHY DEBUG
 
@@ -50,7 +54,7 @@ always @(posedge sysclk or posedge reset) begin
     end else if (MemWriteM) begin
         if(DataAdrM === 100 & WriteDataM === 25) begin
             success <= 1;
-        end else if (DataAdrM !== 96) begin
+        end else if (DataAdrM === 100 & WriteDataM !== 25) begin
             fail <= 1;
         end
     end
@@ -89,7 +93,9 @@ riscv core (
     .MemWriteM(MemWriteM_internal),
     .ALUResultM(DataAdrM_internal),
     .WriteDataM(WriteDataM_internal),
-    .ReadDataM(ReadDataM_internal)
+    .ReadDataM(ReadDataM_internal),
+    .RD1E(RD1E_internal),
+    .RD2E(RD2E_internal)
 );
 
 // Core memory
@@ -164,6 +170,28 @@ bsr #(.WIDTH(32)) ReadDataM_bsr (
     .tdo(bsr_chain[6]),
     .parallel_in(ReadDataM),
     .parallel_out(ReadDataM_internal)
+);
+
+bsr #(.WIDTH(32)) RD1E_bsr (
+    .clk(bsr_clk),
+    .update_dr(bsr_update),
+    .shift_dr(bsr_shift),
+    .mode(bsr_mode),
+    .tdi(bsr_chain[6]),
+    .tdo(bsr_chain[7]),
+    .parallel_in(RD1E_internal),
+    .parallel_out(RD1E)
+);
+
+bsr #(.WIDTH(32)) RD2E_bsr (
+    .clk(bsr_clk),
+    .update_dr(bsr_update),
+    .shift_dr(bsr_shift),
+    .mode(bsr_mode),
+    .tdi(bsr_chain[7]),
+    .tdo(bsr_chain[8]),
+    .parallel_in(RD2E_internal),
+    .parallel_out(RD2E)
 );
 
 

@@ -17,7 +17,7 @@ top dut (
     .trst(trst),
     .tdo(tdo),
     .sysclk(clk),
-    .reset(reset),
+    .sys_reset(reset),
     .success(),
     .fail()
 );
@@ -54,7 +54,7 @@ initial begin
     static logic [11:0] halt_tmsvector = 'b101100_0001_10;
     static logic [11:0] halt_tdivector = 'b000000_0110_00; // LSB first
 
-    static logic [11:0] sp_tmsvector = 'B1100_0001_1100;
+    static logic [11:0] sp_tmsvector = 'b1100_0001_1100;
     static logic [11:0] sp_tdivector = 'b0000_0100_0000; // LSB first
 
 

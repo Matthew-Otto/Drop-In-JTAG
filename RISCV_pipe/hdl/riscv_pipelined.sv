@@ -1,5 +1,8 @@
 // riscvpipelined.sv
 
+// ALU Zero flag has been intentially broken for JTAG debug demo.
+// ALU will never assert ZeroE.
+
 // RISC-V pipelined processor
 // From Section 7.6 of Digital Design & Computer Architecture: RISC-V Edition
 // 27 April 2020
@@ -142,7 +145,9 @@ module riscv(input  logic        clk, reset,
              input logic [31:0]  InstrF,
              output logic    MemWriteM,
              output logic [31:0] ALUResultM, WriteDataM,
-             input logic [31:0]  ReadDataM);
+             input logic [31:0]  ReadDataM,
+             output logic [31:0] RD1E, RD2E
+             );
 
    logic [6:0]        opD;
    logic [2:0]        funct3D;
@@ -174,7 +179,7 @@ module riscv(input  logic        clk, reset,
          FlushE, ForwardAE, ForwardBE, PCSrcE, ALUControlE, ALUSrcE, ZeroE,
                MemWriteM, WriteDataM, ALUResultM, ReadDataM,
                RegWriteW, ResultSrcW,
-               Rs1D, Rs2D, Rs1E, Rs2E, RdE, RdM, RdW);
+               Rs1D, Rs2D, Rs1E, Rs2E, RdE, RdM, RdW, RD1E, RD2E);
 
    hazard  hu(Rs1D, Rs2D, Rs1E, Rs2E, RdE, RdM, RdW,
               PCSrcE, ResultSrcEb0, RegWriteM, RegWriteW,
@@ -316,18 +321,18 @@ module datapath(input logic clk, reset,
                 input logic [1:0]   ResultSrcW,
                 // Hazard Unit signals 
                 output logic [4:0]  Rs1D, Rs2D, Rs1E, Rs2E,
-                output logic [4:0]  RdE, RdM, RdW);
+                output logic [4:0]  RdE, RdM, RdW,
+                output logic [31:0] RD1E, RD2E);
 
    // Fetch stage signals
    logic [31:0]         PCNextF, PCPlus4F;
    // Decode stage signals
-   logic [31:0]         InstrD;
+   (* mark_debug = "true" *) logic [31:0]         InstrD;
    logic [31:0]         PCD, PCPlus4D;
    logic [31:0]         RD1D, RD2D;
    logic [31:0]         ImmExtD;
    logic [4:0]           RdD;
    // Execute stage signals
-   logic [31:0]         RD1E, RD2E;
    logic [31:0]         PCE, ImmExtE;
    logic [31:0]         SrcAE, SrcBE;
    logic [31:0]         ALUResultE;
@@ -576,7 +581,7 @@ module alu(input  logic [31:0] a, b,
        default: result = 32'bx;
      endcase
 
-   assign zero = (result == 32'b0);
+   assign zero = 1'b0; // (result == 32'b0);  // intentionally broken
    assign v = ~(alucontrol[0] ^ a[31] ^ b[31]) & (a[31] ^ sum[31]) & isAddSub;
    
 endmodule
