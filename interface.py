@@ -5,8 +5,6 @@ from telnetlib import Telnet
 debug = True
 
 bsr_format = { # matches the position of the BSR, do not edit
-    "RF2" : 32,
-    "RF1" : 32,
     "ReadData" : 32,
     "WriteData" : 32,
     "DataAdr" : 32,
@@ -34,32 +32,37 @@ def main():
     with Telnet("10.55.0.1", 4444) as tn:
         read()
 
-        trst()
+        fix_bug()
 
-        instr("halt") # stop system clock
-        instr("reset") # reset the core
-
-
-        while True:
-            instr("step") # toggle system clock once
-            instr("sample_preload")
-            data = boundary_scan()
-            if data["PC"] == "00000024":
-                # jump to next instruction
-                preload({"PC" : 28, "Instr" : "0023A233"})
-                instr("clamp")
-
-                break
+        
 
 
-        while True:
-            instr("step") # toggle system clock once
-            instr("sample_preload")
-            if data["PC"] == "00000050":
-                instr("resume")
-                break
+def fix_bug():
+    trst()
 
-        trst()
+    instr("halt") # stop system clock
+    instr("reset") # reset the core
+
+
+    while True:
+        instr("step") # toggle system clock once
+        instr("sample_preload")
+        data = boundary_scan()
+        if data["PC"] == "00000024":
+            # jump to next instruction
+            preload({"PC" : 28, "Instr" : "0023A233"})
+            instr("clamp")
+            break
+
+    while True:
+        instr("step") # toggle system clock once
+        instr("sample_preload")
+        data = boundary_scan()
+        if data["PC"] == "00000050":
+            instr("resume")
+            break
+
+    trst()
 
 
 def trst():

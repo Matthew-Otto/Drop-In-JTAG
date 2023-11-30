@@ -145,8 +145,7 @@ module riscv(input  logic        clk, reset,
              input logic [31:0]  InstrF,
              output logic    MemWriteM,
              output logic [31:0] ALUResultM, WriteDataM,
-             input logic [31:0]  ReadDataM,
-             output logic [31:0] RD1E, RD2E
+             input logic [31:0]  ReadDataM
              );
 
    logic [6:0]        opD;
@@ -179,7 +178,7 @@ module riscv(input  logic        clk, reset,
          FlushE, ForwardAE, ForwardBE, PCSrcE, ALUControlE, ALUSrcE, ZeroE,
                MemWriteM, WriteDataM, ALUResultM, ReadDataM,
                RegWriteW, ResultSrcW,
-               Rs1D, Rs2D, Rs1E, Rs2E, RdE, RdM, RdW, RD1E, RD2E);
+               Rs1D, Rs2D, Rs1E, Rs2E, RdE, RdM, RdW);
 
    hazard  hu(Rs1D, Rs2D, Rs1E, Rs2E, RdE, RdM, RdW,
               PCSrcE, ResultSrcEb0, RegWriteM, RegWriteW,
@@ -321,15 +320,14 @@ module datapath(input logic clk, reset,
                 input logic [1:0]   ResultSrcW,
                 // Hazard Unit signals 
                 output logic [4:0]  Rs1D, Rs2D, Rs1E, Rs2E,
-                output logic [4:0]  RdE, RdM, RdW,
-                output logic [31:0] RD1E, RD2E);
+                output logic [4:0]  RdE, RdM, RdW);
 
    // Fetch stage signals
    logic [31:0]         PCNextF, PCPlus4F;
    // Decode stage signals
-   (* mark_debug = "true" *) logic [31:0]         InstrD;
+   logic [31:0]         InstrD;
    logic [31:0]         PCD, PCPlus4D;
-   logic [31:0]         RD1D, RD2D;
+   logic [31:0]         RD1D, RD2D, RD1E, RD2E;
    logic [31:0]         ImmExtD;
    logic [4:0]           RdD;
    // Execute stage signals

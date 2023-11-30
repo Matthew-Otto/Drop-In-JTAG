@@ -34,7 +34,6 @@ logic extest;
 logic intest;
 (* mark_debug = "true" *) logic clamp;
 (* mark_debug = "true" *) logic clamp_last;
-(* mark_debug = "true" *) logic clamp_hold; // TODO: remove
 
 (* mark_debug = "true" *) logic halt;
 (* mark_debug = "true" *) logic step;
