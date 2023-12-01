@@ -1,5 +1,6 @@
 import tkinter as tk
-from tkinter import font, ttk
+from tkinter import font,ttk
+from tkinter import *
 from telnetlib import Telnet
 import pickle
 
@@ -23,12 +24,14 @@ gui_order = [
     "WriteData",
 ]
 
-
 class RegisterCheckerApp:
     def __init__(self, root):
         # Initialize the main application window
         self.root = root
         self.root.title("Register Checker App")
+
+        self.frame = Frame(root)
+        self.frame.pack()
 
         # Title label
         self.title_label = tk.Label(root, text="Drop-In Semiconductor Tester GUI", font=font.Font(weight='bold', size='18'),
@@ -49,10 +52,10 @@ class RegisterCheckerApp:
         # Set the window size based on the screen size
         screenwidth = root.winfo_screenwidth()
         screenheight = root.winfo_screenheight()
-        width = screenwidth * 0.8  # Adjust the factor as needed
+        self.width = screenwidth * 0.8  # Adjust the factor as needed
         height = screenheight * 0.8
 
-        alignstr = '%dx%d+%d+%d' % (width, height, (screenwidth - width) / 2, (screenheight - height) / 2)
+        alignstr = '%dx%d+%d+%d' % (self.width, height, (screenwidth - self.width) / 2, (screenheight - height) / 2)
         root.geometry(alignstr)
         root.resizable(width=True, height=True)  # Allow resizing
 
@@ -78,22 +81,46 @@ class RegisterCheckerApp:
         # Bind the event to update the canvas scroll region when resized
         self.canvas.bind("<Configure>", self.on_canvas_configure)
 
+    def initialize_blank(self, root, cycle, reference):
+        frame = tk.Frame(self.frame, height=800, width=self.data_width, bg='white', borderwidth=3, relief='solid', padx=5,
+                        pady=8)
+        frame.pack(side='left')
+        self.cycle_label = tk.Label(frame, text='Cycle ' + str(cycle), fg='black', bg='white', padx=2, pady=3,
+                                font=font.Font(weight='bold'), borderwidth=2, relief='solid')
+        self.cycle_label.pack(side='top')
+        for k in gui_order:
+            self.name_entry = tk.Label(frame, text=k, fg='black', bg='white', font=font.Font(weight='bold'), pady=3)
+            self.name_entry.pack(side='top')
+
+            self.expected_label = tk.Label(frame, text="Expected Value", fg='black', bg='white', pady=3)
+            self.expected_label.pack(side='top')
+
+            self.expected_entry = tk.Label(frame, text=reference[k], fg='black', bg='white', width=10, borderwidth=2,
+                                        relief="solid", pady=3)
+            self.expected_entry.pack(side='top')
+
+            self.retrieved_label = tk.Label(frame, text="Retrieved Value", fg='black', bg='white', pady=3)
+            self.retrieved_label.pack(side='top')
+
+            self.retrieved_entry = tk.Label(frame, fg='black', bg='white', width=10, borderwidth=2,
+                                            relief="solid", pady=3)
+            self.retrieved_entry.pack(side='top')
+
+            self.result_label = tk.Label(frame, text="Result", fg='black', bg='white', pady=3)
+            self.result_label.pack(side='top')
+
+            self.result_entry = tk.Label(frame, fg='black', bg='white', width=10, borderwidth=2,
+                                        relief="solid", pady=3)
+            self.result_entry.pack(side='top')
+
     def on_canvas_configure(self, event):
         self.canvas.configure(scrollregion=self.canvas.bbox("all"))
         if event.width != self.canvas.winfo_reqwidth():
             # Update the canvas width to match the frame width
             self.canvas.config(width=event.width)
 
-
     def check_registers(self, cycle, reference, measured):
-        frame = tk.Frame(self.frame, height=800, width=self.data_width, bg='white', borderwidth=3, relief='solid', padx=5,
-                         pady=8)
-        frame.pack(side='left')
-
-        self.cycle_label = tk.Label(frame, text='Cycle ' + str(cycle), fg='black', bg='white', padx=2, pady=3,
-                                    font=font.Font(weight='bold'), borderwidth=2, relief='solid')
-        self.cycle_label.pack(side='top')
-
+        count = 1
         for k in gui_order:
             if reference[k] == measured[k]:
                 result = "Pass"
@@ -104,31 +131,39 @@ class RegisterCheckerApp:
             else:
                 result = "Fail"
                 color = "red"
-
-            self.name_entry = tk.Label(frame, text=k, fg='black', bg='white', font=font.Font(weight='bold'), pady=3)
-            self.name_entry.pack(side='top')
-
-            self.expected_label = tk.Label(frame, text="Expected Value", fg='black', bg='white', pady=3)
-            self.expected_label.pack(side='top')
-
-            self.expected_entry = tk.Label(frame, text=reference[k], fg='black', bg='white', width=10, borderwidth=2,
-                                           relief="solid", pady=3)
-            self.expected_entry.pack(side='top')
-
-            self.retrieved_label = tk.Label(frame, text="Retrieved Value", fg='black', bg='white', pady=3)
-            self.retrieved_label.pack(side='top')
-
-            self.retrieved_entry = tk.Label(frame, text=measured[k], fg='black', bg='white', width=10, borderwidth=2,
-                                            relief="solid", pady=3)
-            self.retrieved_entry.pack(side='top')
-
-            self.result_label = tk.Label(frame, text="Result", fg='black', bg='white', pady=3)
-            self.result_label.pack(side='top')
-
-            self.result_entry = tk.Label(frame, text=result, fg='black', bg=color, width=10, borderwidth=2,
-                                         relief="solid", pady=3)
-            self.result_entry.pack(side='top')
-
+            for frame1 in self.frame.winfo_children()[cycle-1].winfo_children():
+                if isinstance(frame1, tk.Label):
+                    if count == 6 and k == 'PC':
+                        frame1.config(text=measured[k])
+                    elif count == 8 and k == 'PC':
+                        frame1.config(text=result, bg=color)
+                        count = 0
+                        break
+                    elif count == 12 and k == 'Instr':
+                        frame1.config(text=measured[k])
+                    elif count == 14 and k == 'Instr':
+                        frame1.config(text=result, bg=color)
+                        count = 0
+                        break
+                    elif count == 19 and k == 'DataAdr':
+                        frame1.config(text=measured[k])
+                    elif count == 21 and k == 'DataAdr':
+                        frame1.config(text=result, bg=color)
+                        count = 0 
+                        break
+                    elif count == 26 and k == 'ReadData':
+                        frame1.config(text=measured[k])
+                    elif count == 28 and k == 'ReadData':
+                        frame1.config(text=result, bg=color)
+                        count = 0
+                        break
+                    elif count == 33 and k == 'WriteData':
+                        frame1.config(text=measured[k])
+                    elif count == 35 and k == 'WriteData':
+                        frame1.config(text=result, bg=color)
+                        count = 0
+                        break
+                count += 1
 
 def fix_bug():
     if test_mode:
@@ -300,6 +335,9 @@ def main():
 
     with open("fixed_data.pkl", "rb") as f:
         correct_register_data = pickle.load(f)
+
+    for i, data in enumerate(correct_register_data):
+        app.initialize_blank(root, cycle=i+1, reference=data)
 
     root.mainloop()
 
