@@ -4,7 +4,8 @@ from tkinter import font
 from telnetlib import Telnet
 import pickle
 
-debug = True
+debug = False
+test_mode = True
 
 bsr_format = { # matches the position of the BSR, do not edit
     "ReadData" : 32,
@@ -24,60 +25,31 @@ gui_order = [
 ]
 
 
-step_flag = 0
-step_count = 0
-current_cycle = 1
-
-
 def main():
     # Create the main Tkinter window and start the event loop
+    global tn
     global root
+    global app
+    global correct_register_data
+
+    if not test_mode:
+        tn = Telnet("10.55.0.1", 4444)
+
     root = tk.Tk()
+
+    button_run = tk.Button(root, text='Run', width=25, command=run_debug,)
+    button_run.pack()
+
+    button_fix = tk.Button(root, text='Override PC20', width=25, command=fix_bug,)
+    button_fix.pack()
+
     app = RegisterCheckerApp(root)
     root.configure(bg='DarkOrange1')
 
     with open("fixed_data.pkl", "rb") as f:
         correct_register_data = pickle.load(f)
 
-
-    global tn
-    with Telnet("10.55.0.1", 4444) as tn:
-        read()
-
-        trst()
-
-        instr("halt") # stop system clock
-        instr("reset") # reset the core
-
-
-        cycle = 0
-        while (cycle < 25):
-            instr("sample_preload")
-            data = boundary_scan()
-            reference = correct_register_data[cycle]
-
-            app.check_registers(reference, data)
-            instr("step")
-            cycle += 1
-
-        a = input(">")
-
-        root.mainloop()
-
-        root.update()
-
-
-
-
-        #instr("sample_preload")
-        #data = boundary_scan()
-        #app.check_registers()
-        #cycle += 1
-
-    return
-
-
-
+    root.mainloop()
 
 
 class RegisterCheckerApp:
@@ -98,15 +70,14 @@ class RegisterCheckerApp:
         root.geometry(alignstr)
         root.resizable(width=False, height=False)
 
-    def check_registers(self, reference, measured):
+    def check_registers(self, cycle, reference, measured):
         # Clear previous results in the text widget
         #self.result_text.delete(1.0, tk.END)
         frame = Frame(root, height=800, width=100, bg='white', borderwidth=3, relief='solid', padx=5, pady=8)
         frame.pack(side='left')
         # Iterate through registers and check for matches/mismatches
         counter = 0
-        global current_cycle
-        self.cycle_label = tk.Label(frame, text='Cycle '+str(current_cycle), fg='black',bg='white',padx=2, pady=3, font=font.Font(weight='bold'), borderwidth=2, relief='solid')
+        self.cycle_label = tk.Label(frame, text='Cycle '+str(cycle), fg='black',bg='white',padx=2, pady=3, font=font.Font(weight='bold'), borderwidth=2, relief='solid')
         self.cycle_label.pack(side='top')
 
         for k in gui_order:
@@ -143,39 +114,80 @@ class RegisterCheckerApp:
             self.result_entry.pack(side='top')
 
             counter += 1
-        
-        current_cycle = current_cycle + 1
 
 
 
 
 
 def fix_bug():
-    trst()
+    if test_mode:
+        for idx, data in enumerate(correct_register_data):
+            app.check_registers(idx+1, data, data)
+        return
 
+    trst()
     instr("halt") # stop system clock
     instr("reset") # reset the core
 
-
+    cycle = 0
+    #instr("step") # toggle system clock once
     while True:
-        instr("step") # toggle system clock once
         instr("sample_preload")
         data = boundary_scan()
+
         if data["PC"] == "00000024":
             # jump to next instruction
             preload({"PC" : 28, "Instr" : "0023A233"})
             instr("clamp")
+            instr("step") # toggle system clock once
             break
+        else:
+            reference = correct_register_data[cycle]
+            app.check_registers(cycle+1, reference, data)
+
+        instr("step") # toggle system clock once
+        cycle += 1
 
     while True:
-        instr("step") # toggle system clock once
         instr("sample_preload")
         data = boundary_scan()
-        if data["PC"] == "00000050":
+        reference = correct_register_data[cycle]
+        app.check_registers(cycle+1, reference, data)
+
+        if data["DataAdr"] == "00000064" or data["WriteData"] == "00000019":
             instr("resume")
             break
 
+        instr("step") # toggle system clock once
+        cycle += 1
+
     trst()
+    root.update()
+
+
+
+def run_debug():
+    if test_mode:
+        with open("bad_data.pkl", "rb") as f:
+            incorrect_register_data = pickle.load(f)
+        for idx, data in enumerate(correct_register_data):
+            app.check_registers(idx+1, data, incorrect_register_data[idx])
+        return
+
+    trst()
+    instr("halt") # stop system clock
+    instr("reset") # reset the core
+
+    cycle = 0
+    while (cycle < 24):
+        instr("sample_preload")
+        data = boundary_scan()
+        reference = correct_register_data[cycle]
+
+        app.check_registers(cycle+1, reference, data)
+        instr("step")
+        cycle += 1
+
 
 
 def trst():
@@ -196,6 +208,9 @@ def preload(scan_in):
 
 
 def boundary_scan(scan_in=None):
+    if test_mode:
+        return None
+
     payload = "drscan core.tap"
 
     for reg, width in bsr_format.items():
@@ -236,12 +251,16 @@ def execute(cmd):
     return read()
 
 def write(cmd):
-    tn.write(cmd.encode('ascii') + b"\n")
+    if not test_mode:
+        tn.write(cmd.encode('ascii') + b"\n")
 
 def read():
+    if test_mode:
+        return None
+    
     data = b""
     while True:
-        rd = tn.read_until(b"\n", timeout=0.05)
+        rd = tn.read_until(b"\n", timeout=0.01)
         if not rd:
             break
         else:
