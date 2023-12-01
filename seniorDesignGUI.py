@@ -5,7 +5,7 @@ from telnetlib import Telnet
 import pickle
 
 debug = False
-test_mode = True
+test_mode = False
 
 bsr_format = {  # matches the position of the BSR, do not edit
     "ReadData": 32,
@@ -23,6 +23,31 @@ gui_order = [
     "ReadData",
     "WriteData",
 ]
+
+
+def main():
+    global tn
+    global root
+    global app
+    global correct_register_data
+
+    if not test_mode:
+        tn = Telnet("10.55.0.1", 4444)
+
+    root = tk.Tk()
+
+
+    app = RegisterCheckerApp(root)
+    root.configure(bg='DarkOrange1')
+
+    with open("fixed_data.pkl", "rb") as f:
+        correct_register_data = pickle.load(f)
+
+    for i, data in enumerate(correct_register_data):
+        app.initialize_blank(root, cycle=i+1, reference=data)
+
+    root.mainloop()
+
 
 class RegisterCheckerApp:
     def __init__(self, root):
@@ -42,7 +67,7 @@ class RegisterCheckerApp:
         button_run = tk.Button(root, text='Run', width=25, command=run_debug)
         button_run.pack(side='top', anchor ='w')  # Align to the left
 
-        button_fix = tk.Button(root, text='Override PC20', width=25, command=fix_bug)
+        button_fix = tk.Button(root, text='Override PC24', width=25, command=fix_bug)
         button_fix.pack(side='top', anchor ='w')  # Align to the left
 
 
@@ -81,6 +106,7 @@ class RegisterCheckerApp:
         # Bind the event to update the canvas scroll region when resized
         self.canvas.bind("<Configure>", self.on_canvas_configure)
 
+
     def initialize_blank(self, root, cycle, reference):
         frame = tk.Frame(self.frame, height=800, width=self.data_width, bg='white', borderwidth=3, relief='solid', padx=5,
                         pady=8)
@@ -113,11 +139,13 @@ class RegisterCheckerApp:
                                         relief="solid", pady=3)
             self.result_entry.pack(side='top')
 
+
     def on_canvas_configure(self, event):
         self.canvas.configure(scrollregion=self.canvas.bbox("all"))
         if event.width != self.canvas.winfo_reqwidth():
             # Update the canvas width to match the frame width
             self.canvas.config(width=event.width)
+
 
     def check_registers(self, cycle, reference, measured):
         count = 1
@@ -164,12 +192,30 @@ class RegisterCheckerApp:
                         count = 0
                         break
                 count += 1
+        root.update()
+
+
+"""
+def reinit():
+    for cycle in range(25):
+        for frame1 in app.frame.winfo_children()[cycle-1].winfo_children():
+            if isinstance(frame1, tk.Label):
+                frame1.destroy()
+                root.update()
+
+    for idx, data in enumerate(correct_register_data):
+        app.initialize_blank(root, idx + 1, data)
+    root.update()
+"""
+
 
 def fix_bug():
     if test_mode:
         for idx, data in enumerate(correct_register_data):
             app.check_registers(idx + 1, data, data)
         return
+    
+    #reinit()
 
     trst()
     instr("halt")  # stop system clock
@@ -205,9 +251,6 @@ def fix_bug():
 
         instr("step")  # toggle system clock once
         cycle += 1
-
-    trst()
-    root.update()
 
 
 def run_debug():
@@ -316,30 +359,6 @@ def read():
         print(data.decode('ascii'))
 
     return data.decode('ascii')
-
-
-def main():
-    global tn
-    global root
-    global app
-    global correct_register_data
-
-    if not test_mode:
-        tn = Telnet("10.55.0.1", 4444)
-
-    root = tk.Tk()
-
-
-    app = RegisterCheckerApp(root)
-    root.configure(bg='DarkOrange1')
-
-    with open("fixed_data.pkl", "rb") as f:
-        correct_register_data = pickle.load(f)
-
-    for i, data in enumerate(correct_register_data):
-        app.initialize_blank(root, cycle=i+1, reference=data)
-
-    root.mainloop()
 
 
 if __name__ == "__main__":
