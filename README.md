@@ -2,7 +2,7 @@
 Open Source Silicon Development Testing Unit<br>
 Oklahoma State University<br>
 School of Electrical and Computer Engineering<br>
-Matthew Otto, Zach Johnson, Coleman Curtsinger, James Stine<br>
+Matthew Otto, Zach Johnson, Coleman Curtsinger, and James Stine<br>
 
 Links to reference material:
 
