@@ -1,5 +1,5 @@
 # Drop-In-Testing-Design-Project
-Open Source Silicon Development Testing Unit - Senior Design Project<br>
+Open Source Silicon Development Testing Unit<br>
 Oklahoma State University<br>
 
 Links to reference material:
