@@ -1,6 +1,7 @@
 # Drop-In-Testing-Design-Project
 Open Source Silicon Development Testing Unit<br>
 Oklahoma State University<br>
+School of Electrical and Computer Engineering<br>
 Matthew Otto, Zach Johnson, Coleman Curtsinger, James Stine<br>
 
 Links to reference material:
