@@ -7,14 +7,14 @@ PROGS     = $(patsubst %.s,%,$(SRCS))
 
 all:        $(PROGS)
 
-%:        %.s    
-        $(CC) $(CFLAGS) -o $@.elf $<
-        $(OBJDUMP) -Dls $@.elf > $@.objdump
-        $(ELF2HEX) --bit-width 32 --input $@.elf --output $@.memfile
+%:      %.s    
+	$(CC) $(CFLAGS) -o $@.elf $<
+	$(OBJDUMP) -Dls $@.elf > $@.objdump
+	$(ELF2HEX) --bit-width 32 --input $@.elf --output $@.memfile
 
 clean: 
-        rm -f *.elf
-        rm -f *.objdump
-        rm -f *.memfile
-        rm -f *~
+	rm -f *.elf
+	rm -f *.objdump
+	rm -f *.memfile
+	rm -f *~
 
